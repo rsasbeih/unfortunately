@@ -12,7 +12,7 @@ function App() {
   const [monsterSize, setMonsterSize] = useState(() => {
     const s = localStorage.getItem("monsterSize");
     const parsed = s !== null ? parseFloat(s) : null;
-    return parsed !== null && !isNaN(parsed) && parsed >= 1.0 ? parsed : 0.5;
+    return parsed !== null && !isNaN(parsed) ? parsed : 0.5;
   });
 
   const handleFoodLanded = (pos) => {
