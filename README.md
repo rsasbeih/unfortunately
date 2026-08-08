@@ -16,12 +16,12 @@ you throw crumpled paper at a blobby friend. it eats it. it gets bigger. hearts 
 
 ## features that exist
 
-- 🫧 **the blob** — hue-based colors, gloss highlights, belly glow. it's soft. give it a name.
-- 🎯 **feeding mechanic** — drag to aim, release to throw. the ball bounces *everywhere*. gravity fades over bounces. physics is weirdly accurate.
-- 🦘 **monster hopping** — random wandering with a 980ms hop cycle. pursues food when you throw it.
-- 💕 **celebration** — after eating, 3 jumps with hearts floating up. yes, there are hearts. yes, it matters.
-- 📊 **persistence** — color and size saved to localStorage. your monster remembers you.
-- ✨ **eating animation** — particle burst with converge-inward chaos-to-order vibes. designed for maximum satisfaction.
+- 🫧 **the blob** — hue-based colors (HSL), gloss highlights that track screen lighting, belly glow. it's soft. give it a name.
+- 🎯 **feeding mechanic** — drag to aim, release to throw. ball bounces everywhere with physics-based gravity fade. needs 0.25px/ms threshold to actually throw (else it drops).
+- 🦘 **monster hopping** — 90px hops every 980ms total (280ms flight + 700ms jello recovery). random wandering between 1.5–3.5s pauses. pursues food when it lands.
+- 💕 **celebration** — after eating, 3 joy jumps (700ms apart) with the monster smiling. 12 hearts total across 4 bursts (at 0, 700, 1400, 2100ms). hearts rise 180px over 3 seconds.
+- 📊 **persistence** — color (hue 0–359) and size (0.5 default) saved to localStorage. your monster remembers you.
+- ✨ **eating animation** — 5 suction particles drift in, white flash, then 16 particles burst outward and converge inward. total ~800ms of satisfaction.
 
 ## getting started
 
@@ -47,22 +47,31 @@ then open [http://localhost:5173](http://localhost:5173) and throw paper at a bl
 ## technical deep dive (if you care)
 
 ### ball physics
-- gravity fades from 0.5 px/frame² to 0 over 4 bounces
-- friction tightens from 0.99 to 0.97 as gravity fades
-- COR (coefficient of restitution) = 0.65 on all surfaces
-- lands via physics sleep (speed < 0.4 px/frame for 20 frames), not hard floor detection
-- includes squash animation on impact (the "juice")
+- gravity = 0.5 px/frame², fades to 0 over 4 bounces (normalized: `1 - bounceCount/4`)
+- friction = 0.99–0.97 (tightens as bounces increase via `0.99 - (bounceCount/4) * 0.02`)
+- COR (coefficient of restitution) = 0.65 on all surfaces (walls, ceiling, floor)
+- wall bounces additionally dampen horizontal velocity by ×0.9
+- lands via physics sleep: when `hypot(vx, vy) < 0.4` px/frame (pure speed threshold, no frame counter)
+- initial velocity scaled ×3 before simulation
+- squash on impact: 65ms squash + 95ms return (±0.28 scale on axes, flipped for floor vs walls)
 
 ### monster movement
-- wanders randomly with 90px hops
-- 280ms flight time, 980ms total cycle (hop + jello recovery)
-- pursues food when it lands
-- 180px arrival threshold (handles edge cases at size 1.0)
+- wanders randomly with 90px hops, 1500–3500ms pauses between wanders
+- 280ms flight time, 980ms total cycle (includes jello recovery/wobble)
+- arc peak at 13% (126ms), landing at 29% of cycle
+- pursues food when it lands (overrides wander)
+- arrival thresholds: 180px for food (STEP × 2.0), 81px for wander destinations (STEP × 0.9)
+- smiles 30% of the time when reaching destinations (1500ms smile duration)
 
 ### colors
-- all derived from single hue value (0-359)
-- HSL-based: light/mid/dark body stops, gloss tint, belly glow (+20° hue shift)
-- stored in localStorage as `monsterHue`
+- all derived from single hue value (0–359), default = 200
+- body light: `hsl(hue, 72%, 91%)`
+- body mid: `hsl(hue, 55%, 67%)`
+- body dark: `hsl(hue, 55%, 45%)`
+- glow color: `hsl(hue+20, 80%, 62%)` (belly glow, hue shifted for "light from below" feel)
+- gloss color: `hsl(hue, 65%, 95%)` (pale version of hue, not white)
+- gloss position tracks fixed light source at screen top-center
+- stored in localStorage as `monsterHue` (persists across visits)
 
 ### eating animation
 - ball travels to monster center (280ms, ease-in quad)
@@ -73,16 +82,22 @@ then open [http://localhost:5173](http://localhost:5173) and throw paper at a bl
 
 ## size & scale
 
-- default SVG size: 200×200px (configurable via `monsterSize` multiplier)
-- monster center: `monsterPos.x + 100*monsterSize`
-- all coordinates stable via viewBox (doesn't scale with DOM size)
+- SVG base size: 200×200px (all internal coordinates relative to this)
+- monster size multiplier: default = 0.5 (so 100×100px on first visit)
+- actual display size: `200 * monsterSize` pixels
+- monster center: `monsterPos.x + 100 * monsterSize`
+- growth per eat: +0.04 size (no cap, grows infinitely)
+- stored in localStorage as `monsterSize` (persists across visits, min 0.5)
 
 ## known quirks
 
 - the blob is intentionally squatter (wider than tall) to match jello reference
-- eyes are pure black, immune to hue changes (they're professional like that)
-- hearts follow a straight upward path with slight horizontal drift (s-curve was weird)
-- size has no cap because chaos is fun
+- eyes are pure black (#000), immune to hue changes (they're professional like that)
+- hearts rise straight up 180px with slight random horizontal drift (±20px), no s-curve (tested and weird)
+- hearts positioned: left/center/right at monster edges, middle one highest (-30px), sides lower (-15px)
+- size has no cap because chaos is fun (grow infinitely if you feed it enough)
+- ball needs 0.25px/ms throw velocity to actually launch (else it drops like a stone)
+- when monster reaches size 1.0, food arrival threshold becomes 180px (handles edge-clamping bugs)
 
 ## made with
 
