@@ -68,7 +68,10 @@ export default function MonsterHop({
 }) {
   const hue = (() => {
     const s = localStorage.getItem("monsterHue");
-    return s !== null ? parseInt(s, 10) : 200;
+    if (s !== null) return parseInt(s, 10);
+    const randomHue = Math.floor(Math.random() * 360);
+    localStorage.setItem("monsterHue", String(randomHue));
+    return randomHue;
   })();
 
   const svgPx = SVG_BASE_SIZE * size;
