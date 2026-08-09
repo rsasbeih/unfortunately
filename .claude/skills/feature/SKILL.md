@@ -133,9 +133,9 @@ Do NOT use this skill for:
 - Feature compiles without errors
 - No existing features broken (yet — will verify in testing)
 
-### Phase 4: Test in Browser
+### Phase 4: Test in Browser (With Screenshots)
 
-**Goal:** Verify the feature works correctly and doesn't break anything.
+**Goal:** Verify the feature works correctly and doesn't break anything by visual inspection.
 
 **Steps:**
 1. Start dev server (`npm run dev`)
@@ -144,55 +144,92 @@ Do NOT use this skill for:
    - User performs the intended action
    - Feature behaves as described
    - Visual feedback is clear
-4. Test edge cases:
+4. **Take screenshot** showing the result
+5. Analyze the screenshot:
+   - Does the visual match the intended behavior?
+   - Are there any glitches, misalignments, or unexpected rendering?
+   - Do animations look smooth and correct?
+6. If screenshot shows an issue → iterate immediately:
+   - Diagnose the problem from the screenshot
+   - Implement fix
+   - Test again and take new screenshot
+   - Repeat until screenshot looks correct
+7. Test edge cases:
    - What happens if user spams the feature?
    - What happens on mobile/desktop (if applicable)?
    - What happens if localStorage is unavailable?
    - Does it handle small/large screens?
-5. Smoke test existing features:
+   - Take screenshots of edge cases too
+8. Smoke test existing features:
    - Can you still throw the ball?
    - Does monster still eat and grow?
    - Do colors still work?
    - Does persistence still work?
-6. Take screenshot or describe result
+   - Take screenshot showing baseline features still work
 
 **Test Checklist:**
-- [ ] Golden path works as described
-- [ ] No visual glitches (rendering, animation)
+- [ ] Golden path screenshot shows correct behavior
+- [ ] No visual glitches in screenshots (rendering, alignment, animation)
 - [ ] Performance is acceptable (no lag, 60fps animations)
-- [ ] Responsiveness: UI feels snappy
-- [ ] Edge cases handled gracefully
-- [ ] Existing features not broken
+- [ ] Responsiveness: UI feels snappy in screenshots
+- [ ] Edge case screenshots handled gracefully
+- [ ] Existing features still work in screenshots
 - [ ] localStorage saves/loads correctly (if applicable)
-- [ ] Mobile works (if applicable)
+- [ ] Mobile works in screenshots (if applicable)
+
+**Self-Iteration During Testing:**
+- Screenshot shows issue → fix it yourself (don't wait for user feedback)
+- Screenshot looks good → move on to edge cases
+- Only escalate to user if:
+  - Screenshot looks correct but behavior feels wrong
+  - You can't diagnose the visual issue
+  - Visual looks good but design doesn't match spec
 
 **Success Criteria:**
-- Feature works as intended
-- No regressions in other features
-- Ready to show user
+- Screenshots show feature working as intended
+- No visual issues in any screenshot
+- No regressions visible in existing feature screenshots
+- Ready to show user for final approval
 
-### Phase 5: Get User Feedback
+### Phase 5: Show User & Iterate on Feedback
 
-**Goal:** Have user test the feature and confirm it matches their vision.
+**Goal:** Have user review the tested feature and approve it (or request changes).
 
 **Steps:**
-1. Show the result (screenshot + short description of what works)
-2. Ask: "Does this match what you wanted?"
-3. Wait for feedback
-4. If user approves → go to Phase 6 (Commit)
-5. If user requests changes → iterate (go back to implementation and test)
+1. Show the screenshots from Phase 4 testing
+2. Describe what the screenshots show and what works
+3. Ask: "Does this match what you wanted?"
+4. Wait for feedback
+5. If user approves → go to Phase 6 (Commit)
+6. If user requests changes → iterate:
+   - Implement the change
+   - Test in browser (Phase 4 again)
+   - Take new screenshot
+   - Show updated screenshot to user
+   - Repeat until approved
 
-**Possible Responses:**
+**Important Distinction:**
+- You already iterated visually in Phase 4 (based on screenshots)
+- Phase 5 is for user feedback on design/behavior, not visual bugs
+- Example user feedback: "The color picker should be darker" or "This animation is too slow"
+
+**Possible User Responses:**
 - "Yes, perfect" → Commit
-- "Almost, but X needs to change" → Iterate (implement change, test, show again)
+- "Almost, but X needs to change" → Implement, test, show new screenshot
 - "This looks good but I want to also add Y" → Scope next feature separately, commit current one
 - "Not quite, let me describe better..." → Back to Phase 1 (clarify)
 
-**Iteration Cycle:**
-- User feedback → implement change → test → show result → repeat until approved
+**Iteration When User Requests Changes:**
+- User: "Button is too small"
+  - You: Adjust size in code, take screenshot, show updated button
+- User: "Animation feels too fast"
+  - You: Adjust timing in code, test, take screenshot, show updated animation
+- User: "I like this but want to also add color history"
+  - You: "Let's ship color picker first, then add history as next feature"
 
 **Success Criteria:**
-- User explicitly approves the implementation
+- User explicitly approves the implementation (screenshot looks good to them)
+- No more requested changes
 - Feature ready to commit
 
 ### Phase 6: Commit & Push
@@ -238,8 +275,11 @@ Do NOT use this skill for:
 1. Clarify: Where does user trigger it? What's the visual feedback?
 2. Propose: New component? New state in App.jsx? New animation?
 3. Implement: Add event handler, animation, expression
-4. Test: User can perform action, animation plays, no broken features
-5. Commit: "Add petting mechanic"
+4. Test & Screenshots: Perform action, take screenshot showing animation, verify no broken features
+5. Self-iterate: If screenshots show issues (animation wrong, position off, etc.), fix and retest
+6. Show user: Present screenshots, ask for approval
+7. Iterate on feedback: If user requests changes, implement, screenshot, show again
+8. Commit: "Add petting mechanic"
 
 ### New Visual Element (Like Color Picker)
 
@@ -247,8 +287,11 @@ Do NOT use this skill for:
 1. Clarify: Where should it appear? When should it open/close? What options?
 2. Propose: Modal? Sidebar? Inline? How does it affect game state?
 3. Implement: New component, state, handlers, styling
-4. Test: UI renders correctly, color changes apply, game continues running
-5. Commit: "Add color picker settings"
+4. Test & Screenshots: Open picker, change color, take screenshots showing color update and game running
+5. Self-iterate: Fix visual issues (positioning, sizing, layout) based on screenshots
+6. Show user: Present screenshots, ask for approval
+7. Iterate on feedback: User says "make picker darker"? Fix, screenshot, show
+8. Commit: "Add color picker settings"
 
 ### Bug Fix (Like Size Not Persisting)
 
@@ -257,8 +300,10 @@ Do NOT use this skill for:
 2. Diagnose: Read code, find root cause
 3. Propose: How to fix it? Any side effects?
 4. Implement: Minimal fix, no scope creep
-5. Test: Bug is fixed, no regressions
-6. Commit: "Fix size persistence issue"
+5. Test & Screenshots: Verify bug is fixed with screenshot (e.g., reload page, blob stayed same size)
+6. Self-iterate: If screenshots show bug still exists, keep investigating and fixing
+7. Show user: Present before/after screenshots
+8. Commit: "Fix size persistence issue"
 
 ### Performance Optimization
 
@@ -266,8 +311,10 @@ Do NOT use this skill for:
 1. Clarify: What's slow? What's the target performance?
 2. Propose: Refactor strategy, any tradeoffs?
 3. Implement: Code changes with explanation
-4. Test: Measure improvement, no visual regressions
-5. Commit: "Optimize particle rendering"
+4. Test & Screenshots: Before/after screenshots showing improvement (smooth animations, no jank)
+5. Self-iterate: If screenshots show performance still bad, optimize further
+6. Show user: Present screenshots proving improvement
+7. Commit: "Optimize particle rendering"
 
 ### Code Refactoring (Like Extracting Constants)
 
@@ -275,8 +322,9 @@ Do NOT use this skill for:
 1. Clarify: What's being refactored and why?
 2. Propose: Which files change? Any behavior changes?
 3. Implement: Extract/reorganize, update imports
-4. Test: Everything still works, no behavior change
-5. Commit: "Extract magic numbers to src/constants/"
+4. Test & Screenshots: Everything still works, screenshot showing baseline behavior unchanged
+5. Show user: Confirm refactor didn't break anything
+6. Commit: "Extract magic numbers to src/constants/"
 
 ---
 
@@ -352,11 +400,15 @@ Do NOT use this skill for:
 - [ ] Phase 1: User's intent fully understood, no ambiguities
 - [ ] Phase 2: Implementation approach approved by user
 - [ ] Phase 3: Code follows quality standards (headers, naming, constants, comments)
-- [ ] Phase 4: Golden path tested, edge cases handled, no regressions
-- [ ] Phase 5: User explicitly approved the implementation
+- [ ] Phase 4: Screenshots taken showing golden path, edge cases, no visual issues
+- [ ] Phase 4: Self-iterated on any visual issues visible in screenshots
+- [ ] Phase 5: User reviewed screenshots and explicitly approved
+- [ ] Phase 5: User feedback incorporated (if any), new screenshots show updated version
 - [ ] Phase 6: Committed to main with correct authorship, pushed to GitHub
 - [ ] GitHub Actions passed
 - [ ] Feature visible on GitHub Pages (live)
+
+**Key Principle:** Screenshots are your QA. If screenshots look good, feature is good.
 
 If all boxes checked → feature is done.
 
