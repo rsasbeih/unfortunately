@@ -32,7 +32,18 @@
       "Bash(gh repo *)",
       "Bash(git remote *)",
       "Bash(git branch *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(git config *)",
+      "Bash(git commit *)",
+      "Bash(git reset *)",
+      "Read(//c/Users/rsasb/.claude/projects/c--Users-rsasb-OneDrive-Desktop-unfortunately/**)",
+      "Bash(git commit -m 'Add comprehensive SPEC.md documenting entire project *)",
+      "Bash(git commit -m 'Add comprehensive DECISIONS.md documenting all design decisions *)",
+      "Edit(/.claude/skills/feature/**)",
+      "Bash(git commit -m 'Add standing instructions to CLAUDE.md and feature-building skill *)",
+      "Bash(git commit -m 'Emphasize screenshots and self-iteration in feature-building skill *)",
+      "Bash(git commit -m 'Auto-format CLAUDE.md \\(linter\\) *)",
+      "Bash(git commit -m 'Update .claude/settings.json with permission cache *)"
     ]
   }
 }
