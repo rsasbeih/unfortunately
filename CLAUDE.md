@@ -67,9 +67,6 @@ A React + Vite app featuring an animated blob monster built entirely in SVG.
 
 **Testing**: QA passed — full eating flow works, all animations intact.
 
-### Quick Fix: Monster Eyes
-**Change**: Eyes now pure black (#000) instead of hue-derived gray. Eyes stay black regardless of monster color.
-
 ### Feature: Celebration Animation
 **What was added**: After the monster finishes eating:
 1. **Joy jumps** — Monster does 3 celebration jumps (700ms spacing) while staying in place
