@@ -127,6 +127,54 @@ A React + Vite app featuring an animated blob monster built entirely in SVG.
 - Added minimum-value guard (≥1.0) to ignore stale values from old era
 - Ball visual snap on landing: fixed by CSS-transitioning rotation to 0deg + filter removal before React swap
 
+## Standing Instructions
+
+### Git & Commits
+- **Author**: Always commit as Ruba Sbeih <rsasbeih@gmail.com>
+- **Format**: Use Co-Authored-By line: `Co-Authored-By: Ruba Sbeih <rsasbeih@gmail.com>`
+- **Never** include Claude as co-author
+- Create new commits (don't amend unless user explicitly requests)
+- Push immediately after committing
+
+### Testing & QA
+- **Always** test UI changes in browser before marking complete
+- Test golden path (happy case) AND edge cases
+- Monitor for regressions in existing features
+- Don't just check that code compiles — verify behavior in actual app
+- Screenshot or describe the result
+
+### Code Quality
+- **One-liner JSDoc headers**: Every `.jsx` and `.js` file starts with purpose description
+  - Format: `/** Brief description of module purpose. */`
+  - Helps AI agents understand context without reading whole file
+- **Comments for "why" not "what"**: Code should be self-documenting with good names
+- **Clear naming**: No abbreviations unless unavoidable (e.g., `updatePosition` not `upPos`)
+- **Extract magic numbers**: Use `src/constants/` for values used in multiple files
+- **Enums for state**: Use enum constants for phases/states, not magic strings
+- **DRY principle**: Extract duplicate SVG/logic into reusable components
+
+### Development Practices
+- **No over-engineering**: Build what's needed now, don't architect for features we "might" do later
+- **Measure actual behavior**: When accuracy matters, read the code or test, don't trust documentation
+- **No feature scope creep**: Implement exactly what's requested, no "nice-to-haves"
+- **Debug thoroughly**: Diagnose root cause before asking user for more info
+- **Terse communication**: Short updates, no verbose summaries or narration
+
+### Architecture Principles
+- **Front-end only**: No backend, no server calls, no future backend-ready code
+- **localStorage for persistence**: Only persistence layer we use
+- **CSS animations over JS**: Use CSS `@keyframes` for smooth GPU-accelerated animations
+- **SVG for graphics**: Blob and visual elements are SVG, not canvas or sprites
+- **Canvas for particles**: Only particle effects use canvas (performance)
+
+### Deployment
+- **GitHub Pages**: Final deploy target via GitHub Actions
+- **Automated CI/CD**: Every push to main triggers build and deploy
+- **No manual deploys**: Workflow handles everything
+
 ## Planned / not yet done
-- Mouth / expressions
-- Code cleanup / refactoring (noted as needed)
+- Petting mechanic (click/long-press to pet blob)
+- Color picker settings (top-right button)
+- Mobile optimization (touch-friendly throwing)
+- Blob squashing at screen edges
+- Additional expressions/states (future)
