@@ -1,0 +1,25 @@
+name: Cleanup Preview
+on:
+  delete:
+jobs:
+  cleanup:
+    if: github.event.ref_type == 'branch' && github.event.ref != 'main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+        continue-on-error: true
+      - name: Remove preview directory
+        run: |
+          BRANCH_NAME="${{ github.event.ref }}"
+          SANITIZED="${BRANCH_NAME//\//-}"
+          if [ -d "preview/$SANITIZED" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git rm -rf "preview/$SANITIZED"
+            git commit -m "Remove preview for deleted branch $BRANCH_NAME"
+            git push
+          fi
