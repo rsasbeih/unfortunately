@@ -9,6 +9,7 @@ const TOTAL_MS = 980;   // hop + jello recovery (same keyframe)
 const MARGIN   = 50;
 const EDGE_SQUEEZE = 0.7;
 const EDGE_MIN_SCALE = 0.6;
+const EDGE_MAX_SCALE = 1.15;
 
 // Arc peak is at 45% of HOP_MS = 126ms → 126/980 ≈ 13% of TOTAL_MS
 // Landing is at 100% of HOP_MS = 280ms → 280/980 ≈ 29% of TOTAL_MS
@@ -316,8 +317,8 @@ export default function MonsterHop({
   const heightOverflow = Math.max(0, svgPx - viewport.height);
   const widthPressure = widthOverflow / viewport.width;
   const heightPressure = heightOverflow / viewport.height;
-  const edgeScaleX = clamp(1 - widthPressure * EDGE_SQUEEZE + heightPressure * 0.12, EDGE_MIN_SCALE, 1.15);
-  const edgeScaleY = clamp(1 - heightPressure * EDGE_SQUEEZE + widthPressure * 0.12, EDGE_MIN_SCALE, 1.15);
+  const edgeScaleX = clamp(1 - widthPressure * EDGE_SQUEEZE + heightPressure * 0.12, EDGE_MIN_SCALE, EDGE_MAX_SCALE);
+  const edgeScaleY = clamp(1 - heightPressure * EDGE_SQUEEZE + widthPressure * 0.12, EDGE_MIN_SCALE, EDGE_MAX_SCALE);
 
   // Determine eating animation class
   const eatClass = eatPhase === EatPhase.GULP ? 'mh-gulp' : eatPhase === EatPhase.SHIMMY ? 'mh-shimmy' : '';
@@ -352,7 +353,7 @@ export default function MonsterHop({
         }}>
           <div style={{
             transform: `scale(${edgeScaleX}, ${edgeScaleY})`,
-            transformOrigin: "center center",
+            transformOrigin: "center bottom",
             transition: "transform 180ms ease-out",
           }}>
             <div
