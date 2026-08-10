@@ -315,8 +315,8 @@ export default function MonsterHop({
 
   const shadowW = svgPx * 0.72;
   const shadowH = Math.max(4, svgPx * 0.04);
-  const widthOverflow = Math.max(0, svgPx - viewport.width);
-  const heightOverflow = Math.max(0, svgPx - viewport.height);
+  const widthOverflow = Math.max(0, pos.x + svgPx - viewport.width);
+  const heightOverflow = Math.max(0, pos.y + svgPx - viewport.height);
   const widthPressure = widthOverflow / viewport.width;
   const heightPressure = heightOverflow / viewport.height;
   const edgeScaleX = clamp(1 - widthPressure * EDGE_SQUEEZE + heightPressure * EDGE_CROSS_AXIS_COMPENSATION, EDGE_MIN_SCALE, EDGE_MAX_SCALE);
@@ -351,6 +351,8 @@ export default function MonsterHop({
           position:   "absolute",
           left:        pos.x,
           top:         pos.y,
+          width:       svgPx,
+          height:      svgPx,
           transition: `left ${HOP_MS}ms ease-in-out, top ${HOP_MS}ms ease-in-out`,
         }}>
           <div style={{
