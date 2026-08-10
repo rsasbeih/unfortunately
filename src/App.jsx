@@ -2,6 +2,7 @@ import { useState } from "react";
 import "./App.css";
 import MonsterHop from "./MonsterHop";
 import FeedingMechanic from "./feeding/FeedingMechanic";
+import ColorPicker from "./ColorPicker";
 import { PaperPhase } from "./constants/paperPhase";
 function App() {
   const [feedPhase, setFeedPhase] = useState(PaperPhase.IDLE);
@@ -14,6 +15,18 @@ function App() {
     const parsed = s !== null ? parseFloat(s) : null;
     return parsed !== null && !isNaN(parsed) ? parsed : 0.5;
   });
+  const [hue, setHue] = useState(() => {
+    const s = localStorage.getItem("monsterHue");
+    if (s !== null) return parseInt(s, 10);
+    const randomHue = Math.floor(Math.random() * 360);
+    localStorage.setItem("monsterHue", String(randomHue));
+    return randomHue;
+  });
+
+  const handleHueChange = (newHue) => {
+    setHue(newHue);
+    localStorage.setItem("monsterHue", String(newHue));
+  };
 
   const handleFoodLanded = (pos) => {
     setFoodLandPos(pos);
@@ -42,8 +55,10 @@ function App() {
 
   return (
     <div className="app">
+      <ColorPicker hue={hue} onHueChange={handleHueChange} />
       <MonsterHop
         size={monsterSize}
+        hue={hue}
         onPosChange={setMonsterPos}
         foodTarget={feedPhase === PaperPhase.LANDED ? foodLandPos : null}
         isEating={feedPhase === PaperPhase.BEING_EATEN}
