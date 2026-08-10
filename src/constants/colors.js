@@ -1,6 +1,4 @@
-/**
- * Theme palette constants
- */
+/** Theme palette constants for paper, ball, particle, and text colors. */
 
 // Paper/UI palette
 export const PAPER_LIGHT = '#fafaf8';

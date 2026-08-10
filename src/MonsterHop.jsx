@@ -1,3 +1,4 @@
+/** Renders the blob monster with SVG, handles hopping, eating, and celebration. */
 import { useState, useEffect, useRef } from "react";
 import { EatPhase } from "./constants/eatPhases";
 import { SVG_BASE_SIZE } from "./constants/sizes";

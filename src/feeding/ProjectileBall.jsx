@@ -1,6 +1,7 @@
+/** Simulates the thrown ball's physics and renders it as it bounces to a stop. */
 import { useEffect, useRef } from 'react';
 import CreaseLines from './CreaseLines';
-import { BALL_LIGHT, BALL_MEDIUM, BALL_CREASE } from '../constants/colors';
+import { BALL_LIGHT, BALL_MEDIUM } from '../constants/colors';
 
 const BALL_RADIUS = 28;
 const BALL_SIZE   = 56;
@@ -135,6 +136,7 @@ export default function ProjectileBall({ startPos, startVelocity, onLand }) {
         zIndex:     9999,
         willChange: 'transform, left, top',
         userSelect: 'none',
+        touchAction: 'none',
       }}
     >
       <svg

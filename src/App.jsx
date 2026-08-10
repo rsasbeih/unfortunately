@@ -1,8 +1,10 @@
+/** Root component: monster state, persistence, and celebration timing. */
 import { useState } from "react";
 import "./App.css";
 import MonsterHop from "./MonsterHop";
 import FeedingMechanic from "./feeding/FeedingMechanic";
 import { PaperPhase } from "./constants/paperPhase";
+
 function App() {
   const [feedPhase, setFeedPhase] = useState(PaperPhase.IDLE);
   const [monsterPos, setMonsterPos] = useState({ x: 0, y: 0 });

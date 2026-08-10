@@ -1,3 +1,4 @@
+/** Orchestrates the feed-throw-eat lifecycle and pointer tracking for aiming. */
 import { useRef, useEffect } from "react";
 import FeedButton from "./FeedButton";
 import PaperUI from "./PaperUI";
@@ -25,8 +26,8 @@ export default function FeedingMechanic({
     const track = (e) => {
       lastMouse.current = { x: e.clientX, y: e.clientY };
     };
-    window.addEventListener("mousemove", track);
-    return () => window.removeEventListener("mousemove", track);
+    window.addEventListener("pointermove", track);
+    return () => window.removeEventListener("pointermove", track);
   }, []);
 
   const handleThrow = (vel) => {
@@ -61,6 +62,7 @@ export default function FeedingMechanic({
           pointerEvents: "none",
           zIndex: 9998,
           userSelect: "none",
+          touchAction: "none",
         }}
       >
         <svg
