@@ -5,14 +5,6 @@ import MonsterHop from "./MonsterHop";
 import FeedingMechanic from "./feeding/FeedingMechanic";
 import { PaperPhase } from "./constants/paperPhase";
 
-const isMobileOrTablet = () => {
-  if (typeof window === "undefined") return false;
-  if (window.matchMedia("(pointer: coarse)").matches) return true;
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-    navigator.userAgent
-  );
-};
-
 function App() {
   const [feedPhase, setFeedPhase] = useState(PaperPhase.IDLE);
   const [monsterPos, setMonsterPos] = useState({ x: 0, y: 0 });
@@ -22,8 +14,7 @@ function App() {
   const [monsterSize, setMonsterSize] = useState(() => {
     const s = localStorage.getItem("monsterSize");
     const parsed = s !== null ? parseFloat(s) : null;
-    if (parsed !== null && !isNaN(parsed)) return parsed;
-    return isMobileOrTablet() ? 0.5 : 0.5;
+    return parsed !== null && !isNaN(parsed) ? parsed : 0.5;
   });
 
   const handleFoodLanded = (pos) => {
