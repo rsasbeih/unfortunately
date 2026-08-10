@@ -196,8 +196,8 @@ export default function MonsterHop({
   };
 
   const startOrExtendPetting = () => {
-    // Don't allow petting while eating
-    if (eatPhase !== EatPhase.NONE) return;
+    // Don't allow petting while eating or celebrating
+    if (eatPhase !== EatPhase.NONE || isCelebrating) return;
 
     // Clear existing petting timer
     if (pettingTimer.current) clearTimeout(pettingTimer.current);
@@ -215,8 +215,8 @@ export default function MonsterHop({
   };
 
   const handleTouchStart = (e) => {
-    // Don't allow petting while eating
-    if (eatPhase !== EatPhase.NONE) return;
+    // Don't allow petting while eating or celebrating
+    if (eatPhase !== EatPhase.NONE || isCelebrating) return;
 
     isTouching.current = true;
     // Clear existing touch timer
@@ -321,6 +321,11 @@ export default function MonsterHop({
   const prevIsCelebrating = useRef(false);
   useEffect(() => {
     if (isCelebrating && !prevIsCelebrating.current) {
+      // Clear petting if active
+      setIsPetting(false);
+      if (pettingTimer.current) clearTimeout(pettingTimer.current);
+      if (touchTimer.current) clearTimeout(touchTimer.current);
+      
       isPaused.current = true;
       clearAllTimers();
       setIsSmiling(true);
