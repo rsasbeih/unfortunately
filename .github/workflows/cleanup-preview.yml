@@ -1,3 +1,4 @@
+# Delete a branch → removes its preview folder from GitHub Pages
 name: Cleanup Preview
 on:
   delete:

@@ -1,3 +1,4 @@
+# Push to main → builds and deploys the live site to GitHub Pages
 name: Deploy
 on:
   push: { branches: [main] }

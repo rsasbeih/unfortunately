@@ -1,3 +1,4 @@
+# Push to any non-main branch → builds a preview at /unfortunately/preview/<branch-name>/
 name: Preview Deploy
 on:
   push:
