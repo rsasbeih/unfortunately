@@ -64,7 +64,7 @@ const STYLES = `
 
 .mh-gulp   { animation: mhGulp   600ms ease-in-out forwards; }
 .mh-shimmy { animation: mhShimmy 500ms ease-in-out forwards; }
-.mh-petting { animation: mhPetting 600ms ease-in-out forwards; }
+.mh-petting { animation: mhPetting 600ms ease-in-out infinite; }
 `;
 
 export default function MonsterHop({
@@ -106,7 +106,6 @@ export default function MonsterHop({
   const [eatKey,       setEatKey]       = useState(0);
   const [celebrationJumpsLeft, setCelebrationJumpsLeft] = useState(0);
   const [isPetting,    setIsPetting]    = useState(false);
-  const [pettingKey,   setPettingKey]   = useState(0);
 
   const timers        = useRef([]);
   const isPaused      = useRef(false);
@@ -207,9 +206,6 @@ export default function MonsterHop({
     if (!isPetting) {
       setIsPetting(true);
     }
-
-    // Trigger animation keyframe
-    setPettingKey(k => k + 1);
 
     // Set timer to end petting after duration
     pettingTimer.current = setTimeout(() => {
@@ -427,7 +423,7 @@ export default function MonsterHop({
           transition: `left ${HOP_MS}ms ease-in-out, top ${HOP_MS}ms ease-in-out`,
         }}>
           <div
-            key={eatPhase === EatPhase.NONE && !isPetting ? hopKey : isPetting ? `petting-${pettingKey}` : `eat-${eatKey}`}
+            key={eatPhase === EatPhase.NONE && !isPetting ? hopKey : isPetting ? 'petting' : `eat-${eatKey}`}
             className={isPetting ? pettingClass : eatPhase !== EatPhase.NONE ? eatClass : (hopKey > 0 ? "mh-hop" : "")}
             style={{ transformOrigin: "center bottom" }}
           >
