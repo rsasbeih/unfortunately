@@ -1,3 +1,4 @@
+/** Renders the rejection-letter composer overlay and crumple trigger. */
 import { useState, useEffect, useRef } from "react";
 
 const STYLES = `
@@ -101,6 +102,13 @@ export default function PaperUI({ onCrumple, onCancel }) {
     #fafaf5
   `.trim();
 
+  const isMobile =
+    typeof window !== "undefined" &&
+    (window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 600);
+
+  const paperWidth  = isMobile ? Math.min(320, window.innerWidth - 32) : 400;
+  const paperHeight = isMobile ? Math.min(260, window.innerHeight - 160) : 300;
+
   return (
     <>
       <style>{STYLES}</style>
@@ -109,10 +117,10 @@ export default function PaperUI({ onCrumple, onCancel }) {
         className={`pu-paper${shaking ? " pu-shaking" : ""}`}
         style={{
           position: "fixed",
-          bottom: 70,
-          right: 24,
-          width: 400,
-          height: 300,
+          bottom: isMobile ? 50 : 70,
+          right: isMobile ? 12 : 24,
+          width: paperWidth,
+          height: paperHeight,
           background,
           boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
           // Torn top edge via clip-path
@@ -174,13 +182,13 @@ export default function PaperUI({ onCrumple, onCancel }) {
             border: "none",
             outline: "none",
             background: "transparent",
-            fontSize: 14,
             fontFamily: "inherit",
             color: "#444",
             resize: "none",
-            padding: "12px 16px",
+            padding: isMobile ? "8px 12px" : "12px 16px",
             boxSizing: "border-box",
             lineHeight: "28px",
+            fontSize: isMobile ? "16px" : "14px",
           }}
         />
 

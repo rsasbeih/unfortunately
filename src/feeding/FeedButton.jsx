@@ -1,4 +1,4 @@
-import { useState } from "react";
+/** Floating action button that opens the rejection-letter composer. */
 import { PAPER_LIGHT, PAPER_BORDER, PAPER_MEDIUM, PAPER_FOLD, PAPER_CREASE, TEXT_LABEL } from "../constants/colors";
 
 const STYLES = `
@@ -40,6 +40,11 @@ const STYLES = `
 export default function FeedButton({ onClick }) {
   if (!onClick) return null;
 
+  const isMobile =
+    typeof window !== "undefined" &&
+    (window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 600);
+  const btnSize = isMobile ? 28 : 36;
+
   return (
     <>
       <style>{STYLES}</style>
@@ -47,20 +52,21 @@ export default function FeedButton({ onClick }) {
         className="fb-wrap"
         style={{
           position: "fixed",
-          bottom: 24,
-          right: 24,
+          bottom: isMobile ? 12 : 24,
+          right: isMobile ? 12 : 24,
           zIndex: 10000,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
+          touchAction: "none",
         }}
         onClick={onClick}
         title="you got mail"
       >
         <svg
           className="fb-svg"
-          width="36"
-          height="36"
+          width={btnSize}
+          height={btnSize}
           viewBox="0 0 36 36"
           xmlns="http://www.w3.org/2000/svg"
         >
@@ -87,7 +93,7 @@ export default function FeedButton({ onClick }) {
           <line x1="14" y1="6"  x2="9"  y2="20" stroke={PAPER_CREASE} strokeWidth="0.9" strokeLinecap="round" />
           <line x1="22" y1="14" x2="26" y2="26" stroke={PAPER_CREASE} strokeWidth="0.9" strokeLinecap="round" />
         </svg>
-        <div className="fb-label">you got mail</div>
+        {!isMobile && <div className="fb-label">you got mail</div>}
       </div>
     </>
   );

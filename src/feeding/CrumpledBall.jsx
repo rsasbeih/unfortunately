@@ -1,3 +1,4 @@
+/** Renders the draggable crumpled paper ball and converts drag/release into a throw. */
 import { useEffect, useRef, useState } from 'react';
 import CreaseLines from './CreaseLines';
 
@@ -64,7 +65,7 @@ export default function CrumpledBall({ initialPos, onThrow, onDrop }) {
 
     rafId.current = requestAnimationFrame(frame);
 
-    const onMouseMove = (e) => {
+    const onPointerMove = (e) => {
       const now = Date.now();
       targetX.current = e.clientX - 28;
       targetY.current = e.clientY - 28;
@@ -96,16 +97,18 @@ export default function CrumpledBall({ initialPos, onThrow, onDrop }) {
       onDrop({ x: cx, y: cy });
     };
 
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('pointerup',  onPointerUp);
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup',   onPointerUp);
+    window.addEventListener('pointercancel', onPointerUp);
 
     const particleTimer = setTimeout(() => setShowParticle(false), 900);
 
     return () => {
       mounted.current = false;
       cancelAnimationFrame(rafId.current);
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('pointerup',  onPointerUp);
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup',   onPointerUp);
+      window.removeEventListener('pointercancel', onPointerUp);
       clearTimeout(particleTimer);
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -117,17 +120,19 @@ export default function CrumpledBall({ initialPos, onThrow, onDrop }) {
         ref={ballRef}
         className="cb-popin"
         style={{
-          position:     'fixed',
-          top:          0,
-          left:         0,
-          width:        56,
-          height:       56,
-          borderRadius: '50%',
-          background:   'radial-gradient(circle at 35% 35%, #f5f5f0, #d8d8d0)',
-          filter:       'drop-shadow(0 2px 8px rgba(0,0,0,0.22))',
-          pointerEvents:'none',
-          zIndex:       99999,
-          userSelect:   'none',
+          position:      'fixed',
+          top:           0,
+          left:          0,
+          width:         56,
+          height:        56,
+          borderRadius:  '50%',
+          background:    'radial-gradient(circle at 35% 35%, #f5f5f0, #d8d8d0)',
+          filter:        'drop-shadow(0 2px 8px rgba(0,0,0,0.22))',
+          pointerEvents: 'none',
+          zIndex:        99999,
+          userSelect:    'none',
+          touchAction:   'none',
+          WebkitUserSelect: 'none',
         }}
       >
         <svg
