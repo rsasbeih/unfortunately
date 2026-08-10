@@ -73,31 +73,6 @@ then open [http://localhost:5173](http://localhost:5173) and throw paper at a bl
 - gloss position tracks fixed light source at screen top-center
 - stored in localStorage as `monsterHue` (persists across visits)
 
-### eating animation
-- ball travels to monster center (280ms, ease-in quad)
-- 5 suction particles drift inward
-- white radial flash at absorption (90ms)
-- 16 particles burst outward then converge inward (420ms, ease-in cubic)
-- total: ~800ms, monster grows +0.04 size (no cap, grows infinitely)
-
-## size & scale
-
-- SVG base size: 200×200px (all internal coordinates relative to this)
-- monster size multiplier: default = 0.5 (so 100×100px on first visit)
-- actual display size: `200 * monsterSize` pixels
-- monster center: `monsterPos.x + 100 * monsterSize`
-- growth per eat: +0.04 size (no cap, grows infinitely)
-- stored in localStorage as `monsterSize` (persists across visits, min 0.5)
-
-## known quirks
-
-- the blob is intentionally squatter (wider than tall) to match jello reference
-- eyes are pure black (#000), immune to hue changes (they're professional like that)
-- hearts rise straight up 180px with slight random horizontal drift (±20px), no s-curve (tested and weird)
-- hearts positioned: left/center/right at monster edges, middle one highest (-30px), sides lower (-15px)
-- size has no cap because chaos is fun (grow infinitely if you feed it enough)
-- ball needs 0.25px/ms throw velocity to actually launch (else it drops like a stone)
-- when monster reaches size 1.0, food arrival threshold becomes 180px (handles edge-clamping bugs)
 
 ## made with
 
@@ -111,5 +86,3 @@ then open [http://localhost:5173](http://localhost:5173) and throw paper at a bl
 MIT (do whatever, just keep the jello vibe alive)
 
 ---
-
-**tip:** if your blob gets too big, just clear localStorage and start fresh. no judgment. 💕
