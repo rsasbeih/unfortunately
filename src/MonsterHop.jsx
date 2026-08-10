@@ -214,9 +214,12 @@ export default function MonsterHop({
     }, PETTING_DURATION_MS);
   };
 
-  const handleTouchStart = () => {
+  const handleTouchStart = (e) => {
     // Don't allow petting while eating or celebrating
     if (eatPhase !== EatPhase.NONE || isCelebrating) return;
+
+    // Prevent synthetic click event after touch
+    e.preventDefault();
 
     isTouching.current = true;
     // Clear existing touch timer
@@ -428,8 +431,8 @@ export default function MonsterHop({
           transition: `left ${HOP_MS}ms ease-in-out, top ${HOP_MS}ms ease-in-out`,
         }}>
           <div
-            key={eatPhase === EatPhase.NONE && !isPetting ? hopKey : isPetting ? 'petting' : `eat-${eatKey}`}
-            className={isPetting ? pettingClass : eatPhase !== EatPhase.NONE ? eatClass : (hopKey > 0 ? "mh-hop" : "")}
+            key={eatPhase === EatPhase.NONE && !isPetting ? hopKey : !isPetting ? `eat-${eatKey}` : 'petting'}
+            className={eatPhase !== EatPhase.NONE ? eatClass : isPetting ? pettingClass : (hopKey > 0 ? "mh-hop" : "")}
             style={{ transformOrigin: "center bottom" }}
           >
               <svg className="monster" width={svgPx} height={svgPx} viewBox={`0 0 ${SVG_BASE_SIZE} ${SVG_BASE_SIZE}`}>
