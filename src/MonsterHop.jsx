@@ -277,6 +277,11 @@ export default function MonsterHop({
   const prevIsEating = useRef(false);
   useEffect(() => {
     if (isEating && !prevIsEating.current) {
+      // Clear petting if active
+      setIsPetting(false);
+      if (pettingTimer.current) clearTimeout(pettingTimer.current);
+      if (touchTimer.current) clearTimeout(touchTimer.current);
+      
       // Pause hopping
       isPaused.current = true;
       clearAllTimers();
