@@ -214,7 +214,7 @@ export default function MonsterHop({
     }, PETTING_DURATION_MS);
   };
 
-  const handleTouchStart = (e) => {
+  const handleTouchStart = () => {
     // Don't allow petting while eating or celebrating
     if (eatPhase !== EatPhase.NONE || isCelebrating) return;
 
