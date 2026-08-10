@@ -7,6 +7,7 @@ const ARC_H    = 18;
 const HOP_MS   = 280;   // time blob is in the air
 const TOTAL_MS = 980;   // hop + jello recovery (same keyframe)
 const MARGIN   = 50;
+const PETTING_DURATION_MS = 3000; // How long petting lasts if no new clicks
 
 // Arc peak is at 45% of HOP_MS = 126ms → 126/980 ≈ 13% of TOTAL_MS
 // Landing is at 100% of HOP_MS = 280ms → 280/980 ≈ 29% of TOTAL_MS
@@ -53,8 +54,17 @@ const STYLES = `
   100% { transform: scaleX(1)    scaleY(1); }
 }
 
+@keyframes mhPetting {
+  0%   { transform: translateX(0)    scaleX(1)    scaleY(1); }
+  25%  { transform: translateX(4px)  scaleX(1.02) scaleY(0.98); }
+  50%  { transform: translateX(0)    scaleX(1)    scaleY(1); }
+  75%  { transform: translateX(-4px) scaleX(0.98) scaleY(1.02); }
+  100% { transform: translateX(0)    scaleX(1)    scaleY(1); }
+}
+
 .mh-gulp   { animation: mhGulp   600ms ease-in-out forwards; }
 .mh-shimmy { animation: mhShimmy 500ms ease-in-out forwards; }
+.mh-petting { animation: mhPetting 600ms ease-in-out forwards; }
 `;
 
 export default function MonsterHop({
@@ -95,11 +105,16 @@ export default function MonsterHop({
   const [eatPhase,     setEatPhase]     = useState(EatPhase.NONE);
   const [eatKey,       setEatKey]       = useState(0);
   const [celebrationJumpsLeft, setCelebrationJumpsLeft] = useState(0);
+  const [isPetting,    setIsPetting]    = useState(false);
+  const [pettingKey,   setPettingKey]   = useState(0);
 
   const timers        = useRef([]);
   const isPaused      = useRef(false);
   const foodTargetRef = useRef(foodTarget);
   const posRef        = useRef(pos); // always mirrors pos; lets effects read current pos without updater trick
+  const pettingTimer  = useRef(null);
+  const touchTimer    = useRef(null);
+  const isTouching    = useRef(false);
 
   const tick = (fn, ms) => {
     const id = setTimeout(fn, ms);
@@ -180,6 +195,57 @@ export default function MonsterHop({
       tick(() => doHopSequence(next, actualDest), 60 + Math.random() * 40);
     }, HOP_MS);
   };
+
+  const startOrExtendPetting = () => {
+    // Don't allow petting while eating
+    if (eatPhase !== EatPhase.NONE) return;
+
+    // Clear existing petting timer
+    if (pettingTimer.current) clearTimeout(pettingTimer.current);
+
+    // Start petting if not already
+    if (!isPetting) {
+      setIsPetting(true);
+    }
+
+    // Trigger animation keyframe
+    setPettingKey(k => k + 1);
+
+    // Set timer to end petting after duration
+    pettingTimer.current = setTimeout(() => {
+      setIsPetting(false);
+      pettingTimer.current = null;
+    }, PETTING_DURATION_MS);
+  };
+
+  const handleTouchStart = (e) => {
+    // Don't allow petting while eating
+    if (eatPhase !== EatPhase.NONE) return;
+
+    isTouching.current = true;
+    // Clear existing touch timer
+    if (touchTimer.current) clearTimeout(touchTimer.current);
+    
+    // Set timer for long-press (500ms)
+    touchTimer.current = setTimeout(() => {
+      if (isTouching.current) {
+        startOrExtendPetting();
+      }
+    }, 500);
+  };
+
+  const handleTouchEnd = () => {
+    isTouching.current = false;
+    if (touchTimer.current) clearTimeout(touchTimer.current);
+    touchTimer.current = null;
+  };
+
+  useEffect(() => {
+    return () => {
+      if (pettingTimer.current) clearTimeout(pettingTimer.current);
+      if (touchTimer.current) clearTimeout(touchTimer.current);
+    };
+  }, []);
 
   useEffect(() => {
     const start = pos;
@@ -295,11 +361,26 @@ export default function MonsterHop({
     </>
   );
 
+  // Petting expression: distinct from eating smile
+  const pettingExpression = isPetting ? (
+    <>
+      {/* Closed happy eyes (squinty) */}
+      <path d="M 62,92 A 6,6 0 0,1 74,92"   fill="none" stroke="#000" strokeWidth="3.5" strokeLinecap="round" />
+      <path d="M 122,90 A 6,6 0 0,1 134,90" fill="none" stroke="#000" strokeWidth="3.5" strokeLinecap="round" />
+      {/* Open happy mouth with tongue */}
+      <ellipse cx="100" cy="140" rx="18" ry="14" fill="#000" />
+      <ellipse cx="100" cy="150" rx="12" ry="8" fill="#ff6b9d" />
+    </>
+  ) : null;
+
   const shadowW = svgPx * 0.72;
   const shadowH = Math.max(4, svgPx * 0.04);
 
   // Determine eating animation class
   const eatClass = eatPhase === EatPhase.GULP ? 'mh-gulp' : eatPhase === EatPhase.SHIMMY ? 'mh-shimmy' : '';
+  
+  // Determine petting animation class
+  const pettingClass = isPetting ? 'mh-petting' : '';
 
   return (
     <>
@@ -330,8 +411,8 @@ export default function MonsterHop({
           transition: `left ${HOP_MS}ms ease-in-out, top ${HOP_MS}ms ease-in-out`,
         }}>
           <div
-            key={eatPhase === EatPhase.NONE ? hopKey : `eat-${eatKey}`}
-            className={eatPhase !== EatPhase.NONE ? eatClass : (hopKey > 0 ? "mh-hop" : "")}
+            key={eatPhase === EatPhase.NONE && !isPetting ? hopKey : isPetting ? `petting-${pettingKey}` : `eat-${eatKey}`}
+            className={isPetting ? pettingClass : eatPhase !== EatPhase.NONE ? eatClass : (hopKey > 0 ? "mh-hop" : "")}
             style={{ transformOrigin: "center bottom" }}
           >
               <svg className="monster" width={svgPx} height={svgPx} viewBox={`0 0 ${SVG_BASE_SIZE} ${SVG_BASE_SIZE}`}>
@@ -348,11 +429,18 @@ export default function MonsterHop({
                     <path d="M 100,25 C 148,22 192,62 194,108 C 196,148 168,178 100,180 C 32,178 4,148 6,108 C 8,62 52,22 100,25 Z" />
                   </clipPath>
                 </defs>
-                <path d="M 100,25 C 148,22 192,62 194,108 C 196,148 168,178 100,180 C 32,178 4,148 6,108 C 8,62 52,22 100,25 Z" fill="url(#mhBg)" />
+                <path
+                  d="M 100,25 C 148,22 192,62 194,108 C 196,148 168,178 100,180 C 32,178 4,148 6,108 C 8,62 52,22 100,25 Z"
+                  fill="url(#mhBg)"
+                  onClick={startOrExtendPetting}
+                  onTouchStart={handleTouchStart}
+                  onTouchEnd={handleTouchEnd}
+                  style={{ cursor: "pointer" }}
+                />
                 <ellipse cx="90" cy="162" rx="62" ry="20" fill={glowColor}  opacity="0.35" filter="url(#mhF1)" clipPath="url(#mhC)" />
                 <ellipse cx={glossX}      cy={glossY}      rx="32" ry="24" fill={glossColor} opacity="0.6"  filter="url(#mhF2)" clipPath="url(#mhC)" />
                 <ellipse cx={glossX - 4} cy={glossY - 4}  rx="14" ry="10" fill={glossColor} opacity="0.95" filter="url(#mhF3)" clipPath="url(#mhC)" />
-                {eyes}
+                {isPetting ? pettingExpression : eyes}
               </svg>
           </div>
         </div>
