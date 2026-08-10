@@ -59,6 +59,7 @@ const STYLES = `
 
 export default function MonsterHop({
   size           = 1.0,
+  hue            = 0,
   onPosChange    = null,
   foodTarget     = null,
   onFoodArrived  = null,
@@ -66,14 +67,6 @@ export default function MonsterHop({
   isCelebrating  = false,
   onEatComplete  = null,
 }) {
-  const [hue] = useState(() => {
-    const s = localStorage.getItem("monsterHue");
-    if (s !== null) return parseInt(s, 10);
-    const randomHue = Math.floor(Math.random() * 360);
-    localStorage.setItem("monsterHue", String(randomHue));
-    return randomHue;
-  });
-
   const svgPx = SVG_BASE_SIZE * size;
 
   const bodyLight  = `hsl(${hue}, 72%, 91%)`;
