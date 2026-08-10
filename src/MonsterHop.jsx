@@ -96,6 +96,10 @@ export default function MonsterHop({
   const [hopKey,       setHopKey]       = useState(0);
   const [eatPhase,     setEatPhase]     = useState(EatPhase.NONE);
   const [eatKey,       setEatKey]       = useState(0);
+  const [viewport, setViewport] = useState(() => ({
+    width: window.innerWidth,
+    height: window.innerHeight,
+  }));
 
   const timers        = useRef([]);
   const isPaused      = useRef(false);
@@ -117,6 +121,18 @@ export default function MonsterHop({
   useEffect(() => {
     foodTargetRef.current = foodTarget;
   }, [foodTarget]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setViewport({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Report position changes to parent
   const updatePos = (newPos) => {
@@ -247,7 +263,6 @@ export default function MonsterHop({
       isPaused.current = true;
       clearAllTimers();
       setIsSmiling(true);
-      setCelebrationJumpsLeft(3);
 
       const doCelebrationJump = (jumpsRemaining) => {
         setHopKey(k => k + 1);
@@ -276,7 +291,7 @@ export default function MonsterHop({
   // the blob is "looking toward" the light, then shift the gloss that way.
   // lnx: +1 when blob is at far left (light to its right), -1 at far right
   const blobCX = pos.x + svgPx / 2;
-  const lnx = (window.innerWidth / 2 - blobCX) / (window.innerWidth / 2);
+  const lnx = (viewport.width / 2 - blobCX) / (viewport.width / 2);
   // x shifts with light angle; y traces a shallow arc (higher at center, drops toward sides)
   const glossX = 100 + lnx * 35;
   const glossY = 52 + lnx * lnx * 14;
@@ -297,10 +312,10 @@ export default function MonsterHop({
 
   const shadowW = svgPx * 0.72;
   const shadowH = Math.max(4, svgPx * 0.04);
-  const widthOverflow = Math.max(0, svgPx - window.innerWidth);
-  const heightOverflow = Math.max(0, svgPx - window.innerHeight);
-  const widthPressure = widthOverflow / window.innerWidth;
-  const heightPressure = heightOverflow / window.innerHeight;
+  const widthOverflow = Math.max(0, svgPx - viewport.width);
+  const heightOverflow = Math.max(0, svgPx - viewport.height);
+  const widthPressure = widthOverflow / viewport.width;
+  const heightPressure = heightOverflow / viewport.height;
   const edgeScaleX = clamp(1 - widthPressure * EDGE_SQUEEZE + heightPressure * 0.12, EDGE_MIN_SCALE, 1.15);
   const edgeScaleY = clamp(1 - heightPressure * EDGE_SQUEEZE + widthPressure * 0.12, EDGE_MIN_SCALE, 1.15);
 
