@@ -240,6 +240,17 @@ export default function MonsterHop({
     touchTimer.current = null;
   };
 
+  const handleTouchMove = () => {
+    // If already petting, extend the duration while dragging
+    if (isPetting && isTouching.current) {
+      if (pettingTimer.current) clearTimeout(pettingTimer.current);
+      pettingTimer.current = setTimeout(() => {
+        setIsPetting(false);
+        pettingTimer.current = null;
+      }, PETTING_DURATION_MS);
+    }
+  };
+
   useEffect(() => {
     return () => {
       if (pettingTimer.current) clearTimeout(pettingTimer.current);
@@ -439,6 +450,7 @@ export default function MonsterHop({
                   fill="url(#mhBg)"
                   onClick={startOrExtendPetting}
                   onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
                   onTouchEnd={handleTouchEnd}
                   style={{ cursor: "pointer" }}
                 />
