@@ -7,11 +7,11 @@ const ARC_H    = 18;
 const HOP_MS   = 280;   // time blob is in the air
 const TOTAL_MS = 980;   // hop + jello recovery (same keyframe)
 const MARGIN   = 50;
-const EDGE_SQUEEZE = 0.7;
-const EDGE_MIN_SCALE = 0.6;
-const EDGE_MAX_SCALE = 1.15;
-const EDGE_CROSS_AXIS_COMPENSATION = 0.12;
-const EDGE_SQUEEZE_TRANSITION_MS = 180;
+const EDGE_SQUEEZE = 0.7; // How strongly edge pressure reduces the matching axis.
+const EDGE_MIN_SCALE = 0.6; // Keep the blob visible even when the viewport is tiny.
+const EDGE_MAX_SCALE = 1.15; // Let the opposite axis bulge a bit for the squeeze feel.
+const EDGE_CROSS_AXIS_COMPENSATION = 0.12; // Slight bulge on the opposite axis when squeezed.
+const EDGE_SQUEEZE_TRANSITION_MS = 180; // Gentle visual response when the viewport changes.
 
 // Arc peak is at 45% of HOP_MS = 126ms → 126/980 ≈ 13% of TOTAL_MS
 // Landing is at 100% of HOP_MS = 280ms → 280/980 ≈ 29% of TOTAL_MS
@@ -315,8 +315,8 @@ export default function MonsterHop({
 
   const shadowW = svgPx * 0.72;
   const shadowH = Math.max(4, svgPx * 0.04);
-  const widthOverflow = Math.max(0, pos.x + svgPx - viewport.width);
-  const heightOverflow = Math.max(0, pos.y + svgPx - viewport.height);
+  const widthOverflow = Math.max(0, -pos.x, pos.x + svgPx - viewport.width);
+  const heightOverflow = Math.max(0, -pos.y, pos.y + svgPx - viewport.height);
   const widthPressure = widthOverflow / viewport.width;
   const heightPressure = heightOverflow / viewport.height;
   const edgeScaleX = clamp(1 - widthPressure * EDGE_SQUEEZE + heightPressure * EDGE_CROSS_AXIS_COMPENSATION, EDGE_MIN_SCALE, EDGE_MAX_SCALE);
