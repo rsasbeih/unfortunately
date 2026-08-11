@@ -38,6 +38,19 @@ A React + Vite app featuring an animated blob monster built entirely in SVG.
 - `mhGulp` (600ms) then `mhShimmy` (500ms) play on eating; `heartBurst` (3s) lives in `App.jsx`
 - `transform-origin: center bottom` on the animated wrapper so squash anchors to the feet
 
+### Petting (`MonsterHop.jsx` + `src/constants/petting.js`)
+- Nintendogs model: the blob reacts to a pointer held down **and moving**. Hold still and the reaction decays even with the button down
+- **Lean** — the body chases the pointer's horizontal offset, damped at `PET_LEAN_DAMPING` per frame so it trails a beat behind rather than snapping. Offset is `PET_LEAN_WIDTH_RATIO` of the blob's own rendered width, so the gesture reads the same at every size
+- **Shimmy** — `mhPetShimmy` runs only while actively rubbing. Its shift is a *percentage* of the blob's width, so it scales with the body without size math
+- **Pleased face** — the celebration smile reused, plus blush. Petting does not get its own eye shapes; the blush and hearts carry the difference. Follows the rubbing, not the press: stop moving and it fades after `PET_EXPRESSION_HOLD_MS`, while the lean stays, since a motionless finger is still touching the blob
+- **Hearts** — launched every `PET_HEART_INTERVAL_MS`, faster than the `PET_HEART_MS` they take to fade, so a steady rub keeps two or three rising at once, capped at `PET_HEART_MAX_CONCURRENT`. Sides alternate; scatter and a varied lifetime per heart keep the stream off a metronome. Sized and offset off the blob's width; the rise is in `em` so it scales with the heart. Smaller than the celebration hearts, which stay the louder moment. Stop rubbing and launches stop; whatever is airborne finishes
+- Heart launches are decided outside the `setPetHearts` updater, with `heartsRef` as the source of truth. A `setState` updater must be pure — StrictMode invokes it twice, which silently cancelled the alternating-side flip when it lived inside
+- The blob container sets `user-select: none` and `startPet` calls `preventDefault`, because a press-drag would otherwise start a text selection and paint the hearts with the selection highlight
+- **Freeze + linger** — wandering stops on touch and resumes `PET_LINGER_MS` after release
+- Three nested transform layers, because a CSS animation would overwrite an inline transform: hop keyframes → JS lean → CSS shimmy → svg
+- Blocked unless `feedPhase` is IDLE and the blob is neither eating nor celebrating. Pointer events, so touch works
+- Session-only: no growth, nothing persisted
+
 ### Feeding Mechanic
 - **Ball throwing**: Drag to aim, release to throw. Ball bounces across the entire screen with physics-based gravity fade over bounces.
 - **Ball physics** (`ProjectileBall.jsx`):
@@ -79,7 +92,7 @@ A React + Vite app featuring an animated blob monster built entirely in SVG.
 ### Feature: Celebration Animation
 **What was added**: After the monster finishes eating:
 1. **Joy jumps** — Monster does 3 celebration jumps (700ms spacing) while staying in place
-2. **Smiling expression** — Mouth curves up during celebration, then returns to neutral
+2. **Smiling expression** — the eyes curve into arcs during celebration, then return to neutral dots. The blob has no mouth
 3. **Heart bursts** — 3 hearts burst upward with each jump (12 total: initial burst + 3 jumps × 3 hearts each)
    - Hearts spread horizontally around monster center (`(i - 1) * 100 * monsterSize`), middle heart sits slightly higher
    - Staggered 20ms delays per heart for a light cascade
@@ -139,6 +152,13 @@ A React + Vite app featuring an animated blob monster built entirely in SVG.
 - Create new commits (don't amend unless user explicitly requests)
 - Push immediately after committing
 
+#### What belongs in a commit message or PR description
+- **The baseline is `main`, not your first draft.** Describe how the code differs from what the reader already has. That is the only comparison they can make
+- **Never narrate your own working process.** A bug you introduced and fixed before anyone else saw it did not happen as far as the repo is concerned. No "fixed a bug found while iterating", no "my first attempt did X", no "round 3 changed Y", no "the tests caught Z in my own code", no "two bugs worth flagging"
+- The test: *would this line make sense to someone who has never seen my earlier attempts?* If it only makes sense to someone who watched me work, cut it
+- Keep the **rationale**, drop the **story**. `startPet calls preventDefault, because a press-drag would otherwise start a text selection` explains why the code is shaped this way and stays. `the hearts had a blue box until I fixed the selection highlight` is the same fact told as a diary and goes
+- **Iteration belongs in the conversation, not in artifacts.** Report each round while working — that is wanted — then let it go. It does not graduate into the commit message, the PR body, or the docs
+
 ### Testing & QA
 - **Run `npm run test:regression` after every feature, before committing.** Needs `npm run dev` already running. Headless, ~25s, exits non-zero on failure
 - It covers the *existing* features end to end: boot, color picker → blob repaint, the full compose → crumple → throw → settle → pursue → eat → grow chain, persistence across reload, and zero console errors
@@ -182,7 +202,6 @@ A React + Vite app featuring an animated blob monster built entirely in SVG.
 - **No manual deploys**: Workflow handles everything
 
 ## Planned / not yet done
-- Petting mechanic (click/long-press to pet blob)
 - Mobile optimization (touch-friendly throwing)
 - Blob squashing at screen edges
 - Additional expressions/states (future)

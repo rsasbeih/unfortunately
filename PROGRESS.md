@@ -16,8 +16,9 @@
 - **Eating Animation** — Ball travel (280ms), suction particles, white flash, particle burst/converge (total ~800ms)
 - **Size Growth** — +0.04 per eat, no cap, grows infinitely
 - **Celebration Animation** — 3 jumps (700ms apart), monster smile, 12 heart bursts (3 per jump), hearts rise 180px over 3s
+- **Petting** — hold and rub the blob: it leans toward the pointer, shimmies side to side, smiles with blush, and streams two or three hearts at a time, alternating left and right with scatter. Freezes while petted, lingers, then wanders on
 - **Persistence** — Color (monsterHue, random on first visit) and size (monsterSize, default 0.5) saved to localStorage
-- **Blob Expressions** — Eyes (pure black), smile during celebration, neutral state
+- **Blob Expressions** — neutral dot eyes, and one curved-arc smile shared by celebration and petting. The blob has no mouth; every expression is made of eyes, with blush and hearts distinguishing petting
 
 ### Code Quality
 - **Magic Constants Extracted** — `SVG_BASE_SIZE`, phase enums (`paperPhase`, `eatPhases`), color constants
@@ -41,48 +42,13 @@
 
 **Nothing actively in progress right now.** Project is at a stable state with all core mechanics working.
 
-Next feature to build: **Petting Mechanic** (when user requests it)
+Next feature to build: **Mobile optimization** (when user requests it)
 
 ---
 
 ## 📋 Planned (Next Priority Order)
 
-### 1. Petting Mechanic (High Priority)
-**Status:** Spec'd, not started
-**Scope:**
-- Desktop: Click blob to pet, multiple clicks continue petting
-- Mobile: Long-press blob to pet, drag while holding to continue
-- Trigger: Happy expression (different from eating-happy)
-- No persistence needed (session-only)
-- No growth (just happiness/expression)
-
-**Estimated Effort:** 2–3 hours (animation + interaction + testing)
-
-**Workflow:**
-- Phase 1: Clarify interaction feel/duration with user
-- Phase 2: Propose animation state + event handling
-- Phase 3: Implement petting animation + happy expression
-- Phase 4: Test in browser (screenshot golden path + edge cases)
-- Phase 5: Show user, iterate on feedback
-- Phase 6: Commit
-
----
-
-### 2. Color Picker Settings (High Priority)
-**Status:** Spec'd, not started
-**Scope:**
-- Settings button in top-right corner
-- Opens color picker modal (game continues running)
-- User adjusts hue slider (0–359) or picks from palette
-- Real-time color preview on blob
-- New hue saves to localStorage (overwrites old value)
-- Maybe preset colors (uncertain)
-
-**Estimated Effort:** 2–3 hours (UI component + state management + testing)
-
----
-
-### 3. Mobile Optimization (Medium Priority)
+### 1. Mobile Optimization (Medium Priority)
 **Status:** Partial (responsive layout exists, but touch throwing not optimized)
 **Scope:**
 - Touch-drag throwing mechanic (replace/supplement mouse drag)
@@ -94,7 +60,7 @@ Next feature to build: **Petting Mechanic** (when user requests it)
 
 ---
 
-### 4. Blob Squashing at Screen Edges (Lower Priority)
+### 2. Blob Squashing at Screen Edges (Lower Priority)
 **Status:** Spec'd, not started
 **Scope:**
 - When blob exceeds screen bounds, visually squash/get squeezed
@@ -182,7 +148,7 @@ Known non-blocking issues:
 | **localStorage Keys** | 2 (monsterHue, monsterSize) |
 | **Git Commits** | 20+ (since project start) |
 | **Documentation** | 4 files (CLAUDE.md, SPEC.md, DECISIONS.md, SKILL.md) |
-| **Test Coverage** | 14 assertions in `qa/regression.mjs` (`npm run test:regression`); animation feel still manual |
+| **Test Coverage** | 23 assertions in `qa/regression.mjs` (`npm run test:regression`); animation feel still manual |
 | **Build Time** | ~2s (Vite) |
 | **Bundle Size** | ~150KB (unminified, ~50KB minified) |
 
@@ -201,7 +167,7 @@ Known non-blocking issues:
 - All core mechanics tested in browser
 - Golden path verified
 - Edge cases handled (edge clamping, physics settling)
-- Automated regression suite: `npm run test:regression` (headless, 14 assertions, exits non-zero on failure)
+- Automated regression suite: `npm run test:regression` (headless, 23 assertions, exits non-zero on failure)
 - Animation feel (timing, easing) still checked by eye — not automatable in any useful way
 
 ✅ **Performance**

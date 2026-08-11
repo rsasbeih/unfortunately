@@ -1,5 +1,6 @@
 /** Headless end-to-end regression test: run after every feature to prove the existing ones still work. */
 import { chromium } from 'playwright';
+import { PET_HEART_MAX_CONCURRENT } from '../src/constants/petting.js';
 
 const BASE_URL = process.env.REGRESSION_URL ?? 'http://localhost:5173/unfortunately/';
 
@@ -113,6 +114,80 @@ async function run() {
 
     await page.click('.cp-gear'); // close so it can't sit over the feed button
     await page.waitForTimeout(200);
+
+    // ── 3b. Petting: reacts to rubbing, holds still, then lets go ──
+    console.log('\nPetting');
+    const blushOpacity = () =>
+      page.evaluate(() => parseFloat(getComputedStyle(document.querySelector('.mh-blush')).opacity));
+    // Wander position, read off the layer the lean transform does not touch
+    const wanderPos = () =>
+      page.evaluate(() => {
+        const el = document.querySelector('.mh-position');
+        return `${el.style.left}|${el.style.top}`;
+      });
+
+    const blob = await page.locator('svg.monster').boundingBox();
+    const blobCX = blob.x + blob.width / 2;
+    const blobCY = blob.y + blob.height / 2;
+
+    await page.mouse.move(blobCX, blobCY);
+    await page.mouse.down();
+    const posAtPetStart = await wanderPos();
+
+    // Rub in circles; the blob should react to the motion, not the press
+    for (let i = 0; i < 16; i++) {
+      const angle = (i / 8) * Math.PI * 2;
+      await page.mouse.move(
+        blobCX + Math.cos(angle) * blob.width * 0.3,
+        blobCY + Math.sin(angle) * blob.height * 0.15,
+      );
+      await page.waitForTimeout(30);
+    }
+
+    const heartCount = () => page.locator('.mh-pet-heart').count();
+
+    check('rubbing brings up the blush', (await blushOpacity()) > 0.1);
+    check('blob holds still while petted', (await wanderPos()) === posAtPetStart);
+    check('rubbing floats a heart', (await heartCount()) >= 1);
+
+    // Keep rubbing: hearts launch faster than they fade, so they should stack up
+    // to a few at once and never past the cap
+    let maxConcurrent = 0;
+    for (let i = 0; i < 90; i++) {
+      const angle = (i / 8) * Math.PI * 2;
+      await page.mouse.move(
+        blobCX + Math.cos(angle) * blob.width * 0.3,
+        blobCY + Math.sin(angle) * blob.height * 0.15,
+      );
+      await page.waitForTimeout(28);
+      maxConcurrent = Math.max(maxConcurrent, await heartCount());
+    }
+    check('hearts overlap while rubbing', maxConcurrent >= 2, `peak concurrent = ${maxConcurrent}`);
+    check(
+      'hearts stay within the concurrency cap',
+      maxConcurrent <= PET_HEART_MAX_CONCURRENT,
+      `peak ${maxConcurrent}, cap ${PET_HEART_MAX_CONCURRENT}`,
+    );
+
+    await page.mouse.up();
+    await page.waitForTimeout(1300); // past the expression hold
+    check('pleased face clears after release', (await blushOpacity()) < 0.05);
+
+    const heartsStopped = await waitFor(async () => (await heartCount()) === 0, 4000);
+    check('hearts stop after release', heartsStopped === true);
+
+    const wandered = await waitFor(async () => (await wanderPos()) !== posAtPetStart, 8000);
+    check('wandering resumes after petting', wandered === true);
+
+    // Petting must not fight the feeding flow
+    await page.click('.fb-wrap', { force: true });
+    await page.waitForSelector('textarea', { timeout: 5000 });
+    const petCursorDuringFeed = await page.evaluate(
+      () => getComputedStyle(document.querySelector('svg.monster')).pointerEvents,
+    );
+    check('petting disabled while feeding', petCursorDuringFeed === 'none');
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
 
     // ── 4. The whole feeding chain, asserted on its one durable side effect ──
     // Growth only lands in storage if compose → crumple → throw → settle →

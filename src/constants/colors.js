@@ -22,3 +22,7 @@ export const PARTICLE_SUCTION = 'hsl(40, 30%, 80%)';
 
 // Text/UI
 export const TEXT_LABEL = '#aaa';
+
+// Petting — fixed warm pink rather than hue-derived, so blush stays readable as
+// blush on a blob of any colour instead of blending into its own gradient.
+export const BLUSH_COLOR = 'hsl(348, 85%, 68%)';
