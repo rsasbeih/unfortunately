@@ -102,6 +102,7 @@ Do NOT use this skill for:
    - Use clear variable names
    - Extract magic numbers to constants
    - Comments for "why", not "what"
+   - **State the present, not the change.** When you correct a value or a doc line, replace it outright — never leave `// was 0.5` or `(later reverted)` behind. The before/after belongs in the commit message. A reader should never have to reconstruct a timeline to find out which number is live
 2. Follow existing patterns:
    - State management like other components
    - CSS animations for smooth effects
@@ -110,6 +111,7 @@ Do NOT use this skill for:
 4. Don't commit yet — wait for testing
 
 **Code Quality Checklist:**
+- [ ] Comments and docs state current behavior only — no "was X, now Y", no correction notes on stale facts
 - [ ] Every `.jsx`/`.js` file has JSDoc header
 - [ ] No abbreviations in variable names
 - [ ] Magic numbers extracted to `src/constants/`
@@ -259,6 +261,8 @@ Do NOT use this skill for:
 - Blank line
 - Body: explain the "why" and any non-obvious decisions
 - Footer: `Co-Authored-By: Ruba Sbeih <rsasbeih@gmail.com>`
+
+**This is where change history goes.** If you corrected a value, say so here — "default was 1.0, which was wrong, it is 0.5" belongs in the commit body and nowhere else. The files themselves only ever describe the present.
 
 **Success Criteria:**
 - Commit is on `main` branch

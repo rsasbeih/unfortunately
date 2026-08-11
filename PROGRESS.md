@@ -182,7 +182,7 @@ Known non-blocking issues:
 | **localStorage Keys** | 2 (monsterHue, monsterSize) |
 | **Git Commits** | 20+ (since project start) |
 | **Documentation** | 4 files (CLAUDE.md, SPEC.md, DECISIONS.md, SKILL.md) |
-| **Test Coverage** | Manual (screenshot-based, no automated tests yet) |
+| **Test Coverage** | 14 assertions in `qa/regression.mjs` (`npm run test:regression`); animation feel still manual |
 | **Build Time** | ~2s (Vite) |
 | **Bundle Size** | ~150KB (unminified, ~50KB minified) |
 
@@ -201,8 +201,8 @@ Known non-blocking issues:
 - All core mechanics tested in browser
 - Golden path verified
 - Edge cases handled (edge clamping, physics settling)
-- Regressions checked after each change
-- No automated test suite yet (manual QA via screenshots)
+- Automated regression suite: `npm run test:regression` (headless, 14 assertions, exits non-zero on failure)
+- Animation feel (timing, easing) still checked by eye — not automatable in any useful way
 
 ✅ **Performance**
 - CSS animations (GPU-accelerated)

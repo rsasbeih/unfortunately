@@ -470,9 +470,10 @@ Mobile:
 
 ### Current Approach
 
-- Manual QA using Playwright for screenshots/video verification
-- Test flows: ball physics, monster eating, celebration, size persistence, color persistence
-- No automated test suite yet (open to contributions)
+- Automated regression suite: `npm run test:regression` (`qa/regression.mjs`), headless Playwright, 14 assertions, exits non-zero on failure. Requires `npm run dev` running
+- Covers: boot, color picker → blob repaint, the full throw → settle → pursue → eat → grow chain, persistence across reload, console errors
+- Run it after every feature, and add a case for whatever the feature added
+- Animation feel (timing, easing, juice) is still checked by eye — the suite deliberately asserts on durable state, not frame-level timing, so it stays non-flaky
 
 ### Suggested QA Checklist
 

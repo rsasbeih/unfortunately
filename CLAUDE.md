@@ -10,7 +10,7 @@ A React + Vite app featuring an animated blob monster built entirely in SVG.
 - Path: `M 100,25 C 148,22 192,62 194,108 C 196,148 168,178 100,180 C 32,178 4,148 6,108 C 8,62 52,22 100,25 Z`
 - Two-layer gloss highlight in the upper-left (large soft halo + tight bright core)
 - Gloss is hue-tinted (pale version of the blob's own color), NOT white — white looked like a sticker
-- `clipPath="url(#bodyClip)"` on all blur layers (glow + gloss) so blurs fade at the body edge and never bleed outside the silhouette
+- `clipPath="url(#mhC)"` on all blur layers (glow + gloss) so blurs fade at the body edge and never bleed outside the silhouette
 - Subtle belly glow at the base (hue shifted +20° for a natural "light from below" feel)
 - Drop shadow ellipse below the body
 
@@ -19,15 +19,24 @@ A React + Vite app featuring an animated blob monster built entirely in SVG.
 - **Persisted in `localStorage` as `monsterHue`**: random on first visit, same color every reload after that
 - Eventually: each visitor gets their own color that stays with them
 
+### Color Picker (`ColorPicker.jsx`)
+- Gear button fixed at top-right; click (or Enter/Space) toggles a small panel below it
+- Panel holds one hue slider (0–359) over a rainbow gradient track; dragging it recolors the blob live
+- `hue` state lives in `App.jsx` and is passed to both `MonsterHop` and `ColorPicker`; `handleHueChange` writes to `localStorage` on every change
+- Game keeps running while the panel is open (no pause, no modal overlay)
+
 ### Size
-- Controlled by a `size` multiplier (default `1.0`, meaning 200×200px SVG)
-- Applied as `width={200 * size} height={200 * size}` — `viewBox` stays `0 0 200 200` so all coordinates are stable
-- **Persisted in `localStorage` as `monsterSize`** — minimum valid size 1.0 (ignores stale values from old era)
+- Controlled by a `size` multiplier (default `0.5`, so the SVG renders at 100×100px on first visit)
+- Applied as `width={SVG_BASE_SIZE * size}` — `viewBox` stays `0 0 200 200` so all path coordinates are stable
+- **Persisted in `localStorage` as `monsterSize`** — any value that parses as a number is accepted
 - Grows by +0.04 each time the monster eats (no cap — grows infinitely)
 
 ### Animation
-- CSS `@keyframes squish` in `Monster.css`: gentle scaleX/scaleY pulse, 1.7s loop
-- `transform-box: fill-box` + `transform-origin: center bottom` so the squish anchors to the feet
+- All keyframes live in the `STYLES` template string inside `MonsterHop.jsx`, injected via an inline `<style>` tag — there is no separate CSS file for the monster
+- `mhHop` (980ms) is the whole idle motion: arc up at 13%, land at 29%, then a decaying jello wobble through 100%. There is no separate always-on idle pulse
+- `mhShadow` (980ms) shrinks/fades the ground shadow in sync with the arc
+- `mhGulp` (600ms) then `mhShimmy` (500ms) play on eating; `heartBurst` (3s) lives in `App.jsx`
+- `transform-origin: center bottom` on the animated wrapper so squash anchors to the feet
 
 ### Feeding Mechanic
 - **Ball throwing**: Drag to aim, release to throw. Ball bounces across the entire screen with physics-based gravity fade over bounces.
@@ -72,10 +81,9 @@ A React + Vite app featuring an animated blob monster built entirely in SVG.
 1. **Joy jumps** — Monster does 3 celebration jumps (700ms spacing) while staying in place
 2. **Smiling expression** — Mouth curves up during celebration, then returns to neutral
 3. **Heart bursts** — 3 hearts burst upward with each jump (12 total: initial burst + 3 jumps × 3 hearts each)
-   - Hearts arranged radially around monster center
-   - Each heart has slight random offset
-   - Staggered 80ms delays per heart for cascading effect
-   - Fly upward 120px and fade out over 1.5s
+   - Hearts spread horizontally around monster center (`(i - 1) * 100 * monsterSize`), middle heart sits slightly higher
+   - Staggered 20ms delays per heart for a light cascade
+   - Fly upward 180px and fade out over 3s (`heartBurst` keyframe in `App.jsx`)
 4. **Timing**: Celebration lasts ~3.5s total, then monster resumes normal idle wandering
 
 **Implementation**: 
@@ -114,14 +122,12 @@ A React + Vite app featuring an animated blob monster built entirely in SVG.
 **What was added**:
 1. **Ball throwing**: Paper ball crumpling, drag-to-aim, release-to-throw. Ball bounces anywhere on screen.
 2. **New eating animation** (`EatAnimation.jsx`): Canvas overlay with ball travel → white flash → particle burst/converge (satisfying visual feedback).
-3. **Size growth**: Monster grows +0.04 size per eaten ball, persisted to localStorage, capped at 2.0.
+3. **Size growth**: Monster grows +0.04 size per eaten ball, persisted to localStorage.
 4. **Monster pathfinding**: Pursues ball, eats it on arrival, returns to idle.
 
 ### Session: Size Persistence & Bug Fixes
 **Changes**:
-- localStorage key standardized to `monsterSize` (was `monsterSizeV2`)
-- Default changed from 0.5 → 1.0
-- Added minimum-value guard (≥1.0) to ignore stale values from old era
+- localStorage key standardized to `monsterSize`
 - Ball visual snap on landing: fixed by CSS-transitioning rotation to 0deg + filter removal before React swap
 
 ## Standing Instructions
@@ -134,13 +140,19 @@ A React + Vite app featuring an animated blob monster built entirely in SVG.
 - Push immediately after committing
 
 ### Testing & QA
-- **Always** test UI changes in browser before marking complete
-- Test golden path (happy case) AND edge cases
-- Monitor for regressions in existing features
-- Don't just check that code compiles — verify behavior in actual app
-- Screenshot or describe the result
+- **Run `npm run test:regression` after every feature, before committing.** Needs `npm run dev` already running. Headless, ~25s, exits non-zero on failure
+- It covers the *existing* features end to end: boot, color picker → blob repaint, the full compose → crumple → throw → settle → pursue → eat → grow chain, persistence across reload, and zero console errors
+- The growth check is the load-bearing one — `monsterSize` only increases in `localStorage` if the entire feeding chain completed, so one assertion guards the whole mechanic
+- **Add a case to `qa/regression.mjs` when you ship a feature**, so the next feature can't silently break it
+- The suite does not cover animation *feel* (timing, easing, juice). That still needs eyes on the real app — screenshot or describe the result
+- Never write a check that reports PASS without asserting something
 
 ### Code Quality
+- **Write what is true now, never what it used to be.** Correct the value and move on. No `// was 1.0`, no `(previously capped at 2.0)`, no `*(later reverted — see below)*`, no "this used to be X". Applies to code comments, CLAUDE.md, SPEC.md, PROGRESS.md, README — everything in the repo
+  - The reasoning behind a change goes in the **commit message**, where git keeps it attached to the diff that made it. That is the only place history belongs
+  - A reader should learn the current state in one pass, without reconstructing a timeline to work out which number is live
+  - This does not conflict with "why not what" below: explain why the code *is* the way it is, in the present tense. `// 180px covers the worst-case gap when a large blob is edge-clamped` is good. `// raised from 135px because the old value got stuck` is not
+  - When a fact turns out to be wrong or stale, **replace** it. Do not annotate it, strike it through, or leave it with a correction underneath
 - **One-liner JSDoc headers**: Every `.jsx` and `.js` file starts with purpose description
   - Format: `/** Brief description of module purpose. */`
   - Helps AI agents understand context without reading whole file
@@ -171,7 +183,6 @@ A React + Vite app featuring an animated blob monster built entirely in SVG.
 
 ## Planned / not yet done
 - Petting mechanic (click/long-press to pet blob)
-- Color picker settings (top-right button)
 - Mobile optimization (touch-friendly throwing)
 - Blob squashing at screen edges
 - Additional expressions/states (future)
