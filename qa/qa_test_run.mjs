@@ -1,6 +1,11 @@
 import { chromium } from 'playwright';
-import { writeFileSync } from 'fs';
+import { writeFileSync, mkdirSync } from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Resolved from this file, not cwd, so the script works from any directory. Gitignored.
+const OUTPUT_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'output');
+mkdirSync(OUTPUT_DIR, { recursive: true });
 
 async function runQATest() {
   const browser = await chromium.launch({ headless: false });
@@ -19,7 +24,7 @@ async function runQATest() {
   const captureScreenshot = async (name) => {
     screenshotCount++;
     const filename = `${String(screenshotCount).padStart(2, '0')}-${name}.png`;
-    const filepath = path.join(process.cwd(), 'qa-screenshots', filename);
+    const filepath = path.join(OUTPUT_DIR, filename);
     await page.screenshot({ path: filepath });
     screenshots.push(filename);
     return filename;
@@ -276,9 +281,9 @@ async function runQATest() {
     });
 
     testResults.screenshots = screenshots;
-    writeFileSync('qa-results.json', JSON.stringify(testResults, null, 2));
-    console.log('\nResults saved to qa-results.json');
-    console.log(`Screenshots saved in qa-screenshots/ directory`);
+    writeFileSync(path.join(OUTPUT_DIR, 'qa-results.json'), JSON.stringify(testResults, null, 2));
+    console.log(`\nResults saved to ${path.join(OUTPUT_DIR, 'qa-results.json')}`);
+    console.log(`Screenshots saved in ${OUTPUT_DIR}`);
   }
 }
 

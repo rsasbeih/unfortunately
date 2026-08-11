@@ -37,6 +37,9 @@ pnpm-debug.log*
 coverage/
 .nyc_output/
 
+# QA artifacts — regenerable by the scripts in qa/, never commit them
+qa/output/
+
 # Misc
 .cache/
 *.pem

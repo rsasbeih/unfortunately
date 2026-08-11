@@ -10,7 +10,7 @@ A React + Vite app featuring an animated blob monster built entirely in SVG.
 - Path: `M 100,25 C 148,22 192,62 194,108 C 196,148 168,178 100,180 C 32,178 4,148 6,108 C 8,62 52,22 100,25 Z`
 - Two-layer gloss highlight in the upper-left (large soft halo + tight bright core)
 - Gloss is hue-tinted (pale version of the blob's own color), NOT white — white looked like a sticker
-- `clipPath="url(#bodyClip)"` on all blur layers (glow + gloss) so blurs fade at the body edge and never bleed outside the silhouette
+- `clipPath="url(#mhC)"` on all blur layers (glow + gloss) so blurs fade at the body edge and never bleed outside the silhouette
 - Subtle belly glow at the base (hue shifted +20° for a natural "light from below" feel)
 - Drop shadow ellipse below the body
 
@@ -19,15 +19,24 @@ A React + Vite app featuring an animated blob monster built entirely in SVG.
 - **Persisted in `localStorage` as `monsterHue`**: random on first visit, same color every reload after that
 - Eventually: each visitor gets their own color that stays with them
 
+### Color Picker (`ColorPicker.jsx`)
+- Gear button fixed at top-right; click (or Enter/Space) toggles a small panel below it
+- Panel holds one hue slider (0–359) over a rainbow gradient track; dragging it recolors the blob live
+- `hue` state lives in `App.jsx` and is passed to both `MonsterHop` and `ColorPicker`; `handleHueChange` writes to `localStorage` on every change
+- Game keeps running while the panel is open (no pause, no modal overlay)
+
 ### Size
-- Controlled by a `size` multiplier (default `1.0`, meaning 200×200px SVG)
-- Applied as `width={200 * size} height={200 * size}` — `viewBox` stays `0 0 200 200` so all coordinates are stable
-- **Persisted in `localStorage` as `monsterSize`** — minimum valid size 1.0 (ignores stale values from old era)
+- Controlled by a `size` multiplier (default `0.5`, so the SVG renders at 100×100px on first visit)
+- Applied as `width={SVG_BASE_SIZE * size}` — `viewBox` stays `0 0 200 200` so all path coordinates are stable
+- **Persisted in `localStorage` as `monsterSize`** — any parsed number is accepted; the old ≥1.0 minimum guard was removed (it was rejecting legitimately saved sizes)
 - Grows by +0.04 each time the monster eats (no cap — grows infinitely)
 
 ### Animation
-- CSS `@keyframes squish` in `Monster.css`: gentle scaleX/scaleY pulse, 1.7s loop
-- `transform-box: fill-box` + `transform-origin: center bottom` so the squish anchors to the feet
+- All keyframes live in the `STYLES` template string inside `MonsterHop.jsx`, injected via an inline `<style>` tag — there is no separate CSS file for the monster
+- `mhHop` (980ms) is the whole idle motion: arc up at 13%, land at 29%, then a decaying jello wobble through 100%. There is no separate always-on idle pulse
+- `mhShadow` (980ms) shrinks/fades the ground shadow in sync with the arc
+- `mhGulp` (600ms) then `mhShimmy` (500ms) play on eating; `heartBurst` (3s) lives in `App.jsx`
+- `transform-origin: center bottom` on the animated wrapper so squash anchors to the feet
 
 ### Feeding Mechanic
 - **Ball throwing**: Drag to aim, release to throw. Ball bounces across the entire screen with physics-based gravity fade over bounces.
@@ -52,6 +61,24 @@ A React + Vite app featuring an animated blob monster built entirely in SVG.
 
 ## Recent Changes
 
+### Session: Doc Reconciliation + Repo Hygiene
+**What was done**: No behavior changes. Corrected this file where it had drifted from the code, and moved QA artifacts out of the repo root.
+
+**Doc corrections** (each verified against source, not memory):
+- Size default was documented as 1.0 with a ≥1.0 minimum guard; the code defaults to 0.5 with no guard (`App.jsx`)
+- Growth was documented both as uncapped and as capped at 2.0; there is no cap
+- Hearts were documented as 120px over 1.5s with 80ms stagger; the code does 180px over 3s with 20ms stagger (`App.jsx`)
+- The Animation section described a `Monster.css` file and a `squish` keyframe. **Neither exists** — the monster's motion is entirely the `mhHop`/`mhShadow` keyframes in `MonsterHop.jsx`
+- Body clip path was documented as `#bodyClip`; the actual id is `#mhC`
+- Color picker was listed as unbuilt; it shipped in PR #6
+
+**Repo hygiene**:
+- QA scripts moved from the repo root into `qa/`
+- QA outputs (screenshots, `qa-results.json`) untracked and gitignored — they are regenerable
+- `qa_eat.cjs` wrote screenshots to a hardcoded Windows temp path from an old session; repointed to `qa/output/`
+
+**Known remaining drift**: the SVG still carries `className="monster"` with no CSS rule behind it, and `FeedingMechanic` passes `monsterPos`/`monsterSvgPx`/`monsterSize` props to `ProjectileBall` and `CrumpledBall` that neither component declares. Both are harmless leftovers, left alone to keep this change docs-and-files-only.
+
 ### Session: Codebase Cleanup (Lead + 8 Subagents)
 **What was done**: Comprehensive code quality audit and cleanup via multi-agent workflow.
 
@@ -72,10 +99,9 @@ A React + Vite app featuring an animated blob monster built entirely in SVG.
 1. **Joy jumps** — Monster does 3 celebration jumps (700ms spacing) while staying in place
 2. **Smiling expression** — Mouth curves up during celebration, then returns to neutral
 3. **Heart bursts** — 3 hearts burst upward with each jump (12 total: initial burst + 3 jumps × 3 hearts each)
-   - Hearts arranged radially around monster center
-   - Each heart has slight random offset
-   - Staggered 80ms delays per heart for cascading effect
-   - Fly upward 120px and fade out over 1.5s
+   - Hearts spread horizontally around monster center (`(i - 1) * 100 * monsterSize`), middle heart sits slightly higher
+   - Staggered 20ms delays per heart for a light cascade
+   - Fly upward 180px and fade out over 3s (`heartBurst` keyframe in `App.jsx`)
 4. **Timing**: Celebration lasts ~3.5s total, then monster resumes normal idle wandering
 
 **Implementation**: 
@@ -114,15 +140,17 @@ A React + Vite app featuring an animated blob monster built entirely in SVG.
 **What was added**:
 1. **Ball throwing**: Paper ball crumpling, drag-to-aim, release-to-throw. Ball bounces anywhere on screen.
 2. **New eating animation** (`EatAnimation.jsx`): Canvas overlay with ball travel → white flash → particle burst/converge (satisfying visual feedback).
-3. **Size growth**: Monster grows +0.04 size per eaten ball, persisted to localStorage, capped at 2.0.
+3. **Size growth**: Monster grows +0.04 size per eaten ball, persisted to localStorage. (The 2.0 cap described here was later removed — growth is unbounded.)
 4. **Monster pathfinding**: Pursues ball, eats it on arrival, returns to idle.
 
 ### Session: Size Persistence & Bug Fixes
 **Changes**:
 - localStorage key standardized to `monsterSize` (was `monsterSizeV2`)
-- Default changed from 0.5 → 1.0
-- Added minimum-value guard (≥1.0) to ignore stale values from old era
+- Default changed from 0.5 → 1.0 *(later reverted to 0.5 — see below)*
+- Added minimum-value guard (≥1.0) to ignore stale values from old era *(later removed — see below)*
 - Ball visual snap on landing: fixed by CSS-transitioning rotation to 0deg + filter removal before React swap
+
+**Superseded by a later session (Aug 8–9)**: the ≥1.0 guard was rejecting sizes the app had legitimately saved, so sizes never persisted. The guard was deleted and the default returned to 0.5. Current behavior is in the Size section above.
 
 ## Standing Instructions
 
@@ -171,7 +199,6 @@ A React + Vite app featuring an animated blob monster built entirely in SVG.
 
 ## Planned / not yet done
 - Petting mechanic (click/long-press to pet blob)
-- Color picker settings (top-right button)
 - Mobile optimization (touch-friendly throwing)
 - Blob squashing at screen edges
 - Additional expressions/states (future)

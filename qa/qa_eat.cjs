@@ -1,5 +1,9 @@
 const { chromium } = require('playwright');
-const sc = (name) => 'C:\\Users\\rsasb\\AppData\\Local\\Temp\\claude\\c--Users-rsasb-OneDrive-Desktop-unfortunately\\2aaec842-0304-4792-b74c-153d16da3910\\scratchpad\\' + name;
+const path = require('path');
+
+// Was a hardcoded Windows scratchpad path from the session that wrote this script,
+// which broke the script anywhere else. Resolved from this file now. Gitignored.
+const sc = (name) => path.join(__dirname, 'output', name);
 
 (async () => {
   const browser = await chromium.launch({ headless: true });

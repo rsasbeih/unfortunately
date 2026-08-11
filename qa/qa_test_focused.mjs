@@ -1,5 +1,10 @@
 import { chromium } from 'playwright';
-import { writeFileSync } from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Resolved from this file, not cwd, so the script works from any directory. Gitignored.
+const OUTPUT_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'output');
+const outputPath = (name) => path.join(OUTPUT_DIR, name);
 
 async function runFocusedTest() {
   const browser = await chromium.launch({ headless: false });
@@ -42,8 +47,8 @@ async function runFocusedTest() {
     console.log(bodyInnerHTML);
 
     // Take a screenshot
-    await page.screenshot({ path: 'qa-initial-check.png' });
-    console.log('\nScreenshot: qa-initial-check.png');
+    await page.screenshot({ path: outputPath('qa-initial-check.png') });
+    console.log(`\nScreenshot: ${outputPath('qa-initial-check.png')}`);
 
     // Try to interact with the page by using keyboard
     console.log('\nAttempting interaction...');
@@ -70,7 +75,7 @@ async function runFocusedTest() {
     console.log('After click - Root innerHTML sample:', feedPhase);
 
     // Take another screenshot
-    await page.screenshot({ path: 'qa-after-click.png' });
+    await page.screenshot({ path: outputPath('qa-after-click.png') });
 
     console.log('\n=== REFRESHING PAGE ===');
     await page.reload({ waitUntil: 'networkidle' });
