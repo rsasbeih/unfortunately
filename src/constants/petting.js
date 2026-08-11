@@ -22,6 +22,16 @@ export const PET_SHIMMY_MS = 300;        // one side-to-side cycle
 export const PET_SHIMMY_SHIFT_PCT = 2.5;
 export const PET_SHIMMY_SQUASH = 0.02;   // slight scaleX wobble riding along with the shift
 
-export const PET_BLUSH_FADE_MS = 300;      // blush + squint fade in over this
-export const PET_EXPRESSION_HOLD_MS = 700; // pleased face lingers this long after release
+// Hearts drift up one at a time while rubbing, alternating sides. The gap keeps
+// them strictly sequential — the previous heart is gone before the next appears,
+// rather than the two swapping over on the same frame.
+export const PET_HEART_MS = 2000;
+export const PET_HEART_GAP_MS = 250;
+// Smaller than the celebration hearts on purpose: petting is the quiet version
+export const PET_HEART_SIZE_RATIO = 0.18;   // font size as a fraction of blob width
+export const PET_HEART_OFFSET_RATIO = 0.44; // how far from centre each side sits
+export const PET_HEART_RISE_EM = 2.6;       // rise in em, so it scales with the heart
+
+export const PET_BLUSH_FADE_MS = 300;      // blush fades in over this
+export const PET_EXPRESSION_HOLD_MS = 700; // pleased face lingers this long after rubbing stops
 export const PET_LINGER_MS = 900;          // blob stays put this long before wandering again

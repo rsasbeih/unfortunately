@@ -16,9 +16,9 @@
 - **Eating Animation** — Ball travel (280ms), suction particles, white flash, particle burst/converge (total ~800ms)
 - **Size Growth** — +0.04 per eat, no cap, grows infinitely
 - **Celebration Animation** — 3 jumps (700ms apart), monster smile, 12 heart bursts (3 per jump), hearts rise 180px over 3s
-- **Petting** — hold and rub the blob: it leans toward the pointer, shimmies side to side, and shows a contented squint with blush. Freezes while petted, lingers, then wanders on
+- **Petting** — hold and rub the blob: it leans toward the pointer, shimmies side to side, smiles with blush, and floats single hearts that alternate left and right. Freezes while petted, lingers, then wanders on
 - **Persistence** — Color (monsterHue, random on first visit) and size (monsterSize, default 0.5) saved to localStorage
-- **Blob Expressions** — neutral dot eyes, curved-arc smile during celebration, contented squint plus blush while petted. The blob has no mouth; every expression is made of eyes
+- **Blob Expressions** — neutral dot eyes, and one curved-arc smile shared by celebration and petting. The blob has no mouth; every expression is made of eyes, with blush and hearts distinguishing petting
 
 ### Code Quality
 - **Magic Constants Extracted** — `SVG_BASE_SIZE`, phase enums (`paperPhase`, `eatPhases`), color constants
@@ -148,7 +148,7 @@ Known non-blocking issues:
 | **localStorage Keys** | 2 (monsterHue, monsterSize) |
 | **Git Commits** | 20+ (since project start) |
 | **Documentation** | 4 files (CLAUDE.md, SPEC.md, DECISIONS.md, SKILL.md) |
-| **Test Coverage** | 19 assertions in `qa/regression.mjs` (`npm run test:regression`); animation feel still manual |
+| **Test Coverage** | 22 assertions in `qa/regression.mjs` (`npm run test:regression`); animation feel still manual |
 | **Build Time** | ~2s (Vite) |
 | **Bundle Size** | ~150KB (unminified, ~50KB minified) |
 
@@ -167,7 +167,7 @@ Known non-blocking issues:
 - All core mechanics tested in browser
 - Golden path verified
 - Edge cases handled (edge clamping, physics settling)
-- Automated regression suite: `npm run test:regression` (headless, 19 assertions, exits non-zero on failure)
+- Automated regression suite: `npm run test:regression` (headless, 22 assertions, exits non-zero on failure)
 - Animation feel (timing, easing) still checked by eye — not automatable in any useful way
 
 ✅ **Performance**

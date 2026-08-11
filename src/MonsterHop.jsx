@@ -14,6 +14,11 @@ import {
   PET_BLUSH_FADE_MS,
   PET_EXPRESSION_HOLD_MS,
   PET_LINGER_MS,
+  PET_HEART_MS,
+  PET_HEART_GAP_MS,
+  PET_HEART_SIZE_RATIO,
+  PET_HEART_OFFSET_RATIO,
+  PET_HEART_RISE_EM,
 } from "./constants/petting";
 
 const STEP     = 90;
@@ -82,6 +87,19 @@ const STYLES = `
 .mh-pet-shimmy { animation: mhPetShimmy ${PET_SHIMMY_MS}ms ease-in-out infinite; }
 
 .mh-blush { transition: opacity ${PET_BLUSH_FADE_MS}ms ease; }
+
+/* Rise is in em, so it scales with the heart, which is sized off the blob */
+@keyframes mhPetHeart {
+  0%   { opacity: 0; transform: translate(-50%, 0)                        scale(0.6); }
+  18%  { opacity: 1; transform: translate(-50%, -0.7em)                   scale(1); }
+  70%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -${PET_HEART_RISE_EM}em)  scale(0.9); }
+}
+.mh-pet-heart {
+  position: fixed;
+  pointer-events: none;
+  animation: mhPetHeart ${PET_HEART_MS}ms ease-out forwards;
+}
 `;
 
 export default function MonsterHop({
@@ -126,6 +144,10 @@ export default function MonsterHop({
   const leanRef_value  = useRef(0);    // current lean, chases targetLeanRef
   const targetLeanRef  = useRef(0);    // -1..1, where the pointer sits across the body
   const pleasedTimerRef = useRef(null);
+  const [petHearts,   setPetHearts]   = useState([]);
+  const heartSideRef  = useRef(1);  // +1 right, -1 left; flips per heart
+  const heartIdRef    = useRef(0);
+  const lastHeartAtRef = useRef(0);
 
   const timers        = useRef([]);
   const isPaused      = useRef(false);
@@ -350,6 +372,9 @@ export default function MonsterHop({
 
   const startPet = (e) => {
     if (!petAllowed || isPettingRef.current) return;
+    // Rubbing is a press-drag, which would otherwise start a text selection and
+    // paint the hearts and everything else with the selection highlight
+    e.preventDefault();
     isPettingRef.current = true;
     isPaused.current     = true;
     clearAllTimers(); // drop the wander so the blob holds still to be petted
@@ -414,6 +439,37 @@ export default function MonsterHop({
     }
   }, [isRubbing]);
 
+  // One heart at a time while rubbing, alternating sides, the next starting as
+  // the previous finishes. Stop rubbing and no more are emitted; the one still
+  // in the air is left to finish rather than popped out.
+  useEffect(() => {
+    if (!isRubbing) return;
+
+    const emit = () => {
+      lastHeartAtRef.current = Date.now();
+      const side = heartSideRef.current;
+      heartSideRef.current = -side;
+      const id = (heartIdRef.current += 1);
+      setPetHearts(hearts => [...hearts, { id, side }]);
+    };
+
+    // A brief pause in rubbing re-runs this effect; don't let that stack hearts
+    const cycleMs    = PET_HEART_MS + PET_HEART_GAP_MS;
+    const sinceLast  = Date.now() - lastHeartAtRef.current;
+    const firstDelay = Math.max(0, cycleMs - sinceLast);
+
+    let intervalId = null;
+    const startId = setTimeout(() => {
+      emit();
+      intervalId = setInterval(emit, cycleMs);
+    }, firstDelay);
+
+    return () => {
+      clearTimeout(startId);
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [isRubbing]);
+
   // Feeding or celebrating takes the blob back; drop any pet in progress
   useEffect(() => {
     if (!petAllowed && isPettingRef.current) {
@@ -435,14 +491,7 @@ export default function MonsterHop({
   const lEye = 68  + eyeShift;
   const rEye = 128 + eyeShift;
 
-  // Three faces: pleased (petting) is a wide contented squint, deliberately
-  // flatter and broader than the celebration smile so the two read apart.
-  const pleasedEyes = (
-    <>
-      <path d="M 56,96 A 11,7 0 0,1 80,96"   fill="none" stroke="#000" strokeWidth="4" strokeLinecap="round" />
-      <path d="M 116,94 A 11,7 0 0,1 140,94" fill="none" stroke="#000" strokeWidth="4" strokeLinecap="round" />
-    </>
-  );
+  // Petting reuses the celebration smile; blush and hearts carry the difference
   const smilingEyes = (
     <>
       <path d="M 62,95 A 6,6 0 0,1 74,95"   fill="none" stroke="#000" strokeWidth="3.5" strokeLinecap="round" />
@@ -455,7 +504,7 @@ export default function MonsterHop({
       <circle cx={rEye} cy="90" r="6" fill="#000" />
     </>
   );
-  const eyes = isPleased ? pleasedEyes : isSmiling ? smilingEyes : neutralEyes;
+  const eyes = isPleased || isSmiling ? smilingEyes : neutralEyes;
 
   const shadowW = svgPx * 0.72;
   const shadowH = Math.max(4, svgPx * 0.04);
@@ -466,7 +515,10 @@ export default function MonsterHop({
   return (
     <>
       <style>{STYLES}</style>
-      <div style={{ position: "fixed", inset: 0, overflow: "hidden", pointerEvents: "none", zIndex: 9999 }}>
+      <div style={{
+        position: "fixed", inset: 0, overflow: "hidden", pointerEvents: "none", zIndex: 9999,
+        userSelect: "none", WebkitUserSelect: "none",
+      }}>
 
         {/* Shadow — outer div tracks position smoothly, inner div runs the animation */}
         <div style={{
@@ -483,6 +535,25 @@ export default function MonsterHop({
             style={{ width: "100%", height: "100%", background: "rgba(0,0,0,0.15)", borderRadius: "50%", transformOrigin: "center" }}
           />
         </div>
+
+        {/* Petting hearts — removed on animationend, so they need no timers */}
+        {petHearts.map(heart => (
+          <div
+            key={heart.id}
+            className="mh-pet-heart"
+            onAnimationEnd={() =>
+              setPetHearts(hearts => hearts.filter(h => h.id !== heart.id))
+            }
+            style={{
+              left:     pos.x + svgPx / 2 + heart.side * svgPx * PET_HEART_OFFSET_RATIO,
+              top:      pos.y + svgPx * 0.22,
+              fontSize: svgPx * PET_HEART_SIZE_RATIO,
+              zIndex:   10000,
+            }}
+          >
+            ❤️
+          </div>
+        ))}
 
         {/* Blob — one div handles arc + stretch + squash + jello all in one keyframe */}
         <div className="mh-position" style={{

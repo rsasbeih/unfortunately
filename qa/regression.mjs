@@ -143,12 +143,32 @@ async function run() {
       await page.waitForTimeout(30);
     }
 
+    const heartCount = () => page.locator('.mh-pet-heart').count();
+
     check('rubbing brings up the blush', (await blushOpacity()) > 0.1);
     check('blob holds still while petted', (await wanderPos()) === posAtPetStart);
+    check('rubbing floats a heart', (await heartCount()) === 1);
+
+    // Keep rubbing across a heart changeover — they alternate one at a time,
+    // never overlapping, so the count must never exceed 1
+    let maxConcurrent = 0;
+    for (let i = 0; i < 90; i++) {
+      const angle = (i / 8) * Math.PI * 2;
+      await page.mouse.move(
+        blobCX + Math.cos(angle) * blob.width * 0.3,
+        blobCY + Math.sin(angle) * blob.height * 0.15,
+      );
+      await page.waitForTimeout(28);
+      maxConcurrent = Math.max(maxConcurrent, await heartCount());
+    }
+    check('hearts never overlap', maxConcurrent === 1, `peak concurrent = ${maxConcurrent}`);
 
     await page.mouse.up();
     await page.waitForTimeout(1300); // past the expression hold
     check('pleased face clears after release', (await blushOpacity()) < 0.05);
+
+    const heartsStopped = await waitFor(async () => (await heartCount()) === 0, 4000);
+    check('hearts stop after release', heartsStopped === true);
 
     const wandered = await waitFor(async () => (await wanderPos()) !== posAtPetStart, 8000);
     check('wandering resumes after petting', wandered === true);
