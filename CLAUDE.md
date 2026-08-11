@@ -51,6 +51,15 @@ A React + Vite app featuring an animated blob monster built entirely in SVG.
 - Blocked unless `feedPhase` is IDLE and the blob is neither eating nor celebrating. Pointer events, so touch works
 - Session-only: no growth, nothing persisted
 
+### Mobile / touch (`src/constants/layout.js`)
+- **Pointer events everywhere.** A touch device fires no `mousemove` at all, so any drag built on mouse events silently degrades: the crumpled ball never tracks the finger, no velocity is recorded, and every throw becomes a drop where you tapped. `CrumpledBall` and `FeedingMechanic` listen for `pointermove`/`pointerup`/`pointercancel`
+- **Compose panel** caps at `PAPER_MAX_WIDTH_PX` but never exceeds the viewport minus `PAPER_EDGE_GAP_PX` on each side, so it cannot hang off a narrow phone
+- **Touch targets** reach `TOUCH_TARGET_MIN_PX`. The feed button gets there with padding, keeping its icon the same size; the gear grows below `MOBILE_BREAKPOINT_PX`
+- **Hover styles are wrapped in `@media (hover: hover)`.** On a touch screen a tapped `:hover` sticks until you tap elsewhere, which left the gear permanently rotated and the stamp permanently inverted
+- **`100dvh`, not `100vh`** — mobile browser chrome makes `100vh` taller than the visible area
+- `touch-action: none` and `overscroll-behavior: none` on `html, body` so dragging a ball or rubbing the blob cannot scroll or bounce the page. `textarea`/`input` opt back in, so typing and the hue slider still work
+- Celebration hearts scale off the blob via `CELEBRATION_HEART_SIZE_RATIO`; at a fixed size they nearly matched the width of a phone-sized blob
+
 ### Feeding Mechanic
 - **Ball throwing**: Drag to aim, release to throw. Ball bounces across the entire screen with physics-based gravity fade over bounces.
 - **Ball physics** (`ProjectileBall.jsx`):
@@ -202,6 +211,5 @@ A React + Vite app featuring an animated blob monster built entirely in SVG.
 - **No manual deploys**: Workflow handles everything
 
 ## Planned / not yet done
-- Mobile optimization (touch-friendly throwing)
 - Blob squashing at screen edges
 - Additional expressions/states (future)

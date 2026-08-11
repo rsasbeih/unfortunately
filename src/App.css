@@ -1,8 +1,29 @@
 .app {
-width: 100vw;
-height: 100vh;
-display: flex;
-align-items: center;
-justify-content: center;
-background: #dff5e1;
+  width: 100vw;
+  height: 100vh;
+  /* Mobile browser chrome makes 100vh taller than what you can actually see */
+  height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #dff5e1;
+  overflow: hidden;
+}
+
+/* Dragging a ball or rubbing the blob must not scroll, bounce or select the
+   page underneath it */
+html, body {
+  overscroll-behavior: none;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
+}
+
+/* Text still has to be selectable where typing happens */
+textarea, input {
+  -webkit-user-select: text;
+  user-select: text;
+  touch-action: auto;
 }

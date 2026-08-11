@@ -17,6 +17,7 @@
 - **Size Growth** — +0.04 per eat, no cap, grows infinitely
 - **Celebration Animation** — 3 jumps (700ms apart), monster smile, 12 heart bursts (3 per jump), hearts rise 180px over 3s
 - **Petting** — hold and rub the blob: it leans toward the pointer, shimmies side to side, smiles with blush, and streams two or three hearts at a time, alternating left and right with scatter. Freezes while petted, lingers, then wanders on
+- **Mobile / touch** — pointer events throughout so touch drags throw properly, responsive compose panel, 44px touch targets, no sticky hover, 100dvh, no scroll or overscroll while dragging
 - **Persistence** — Color (monsterHue, random on first visit) and size (monsterSize, default 0.5) saved to localStorage
 - **Blob Expressions** — neutral dot eyes, and one curved-arc smile shared by celebration and petting. The blob has no mouth; every expression is made of eyes, with blush and hearts distinguishing petting
 
@@ -42,25 +43,13 @@
 
 **Nothing actively in progress right now.** Project is at a stable state with all core mechanics working.
 
-Next feature to build: **Mobile optimization** (when user requests it)
+Next feature to build: **Blob squashing at screen edges** (when user requests it)
 
 ---
 
 ## 📋 Planned (Next Priority Order)
 
-### 1. Mobile Optimization (Medium Priority)
-**Status:** Partial (responsive layout exists, but touch throwing not optimized)
-**Scope:**
-- Touch-drag throwing mechanic (replace/supplement mouse drag)
-- Verify all UI elements work on small screens
-- Test on various mobile devices
-- Ensure blob size (0.5 default) scales appropriately
-
-**Estimated Effort:** 3–4 hours (touch event handlers + testing across devices)
-
----
-
-### 2. Blob Squashing at Screen Edges (Lower Priority)
+### 1. Blob Squashing at Screen Edges (Lower Priority)
 **Status:** Spec'd, not started
 **Scope:**
 - When blob exceeds screen bounds, visually squash/get squeezed
@@ -148,7 +137,7 @@ Known non-blocking issues:
 | **localStorage Keys** | 2 (monsterHue, monsterSize) |
 | **Git Commits** | 20+ (since project start) |
 | **Documentation** | 4 files (CLAUDE.md, SPEC.md, DECISIONS.md, SKILL.md) |
-| **Test Coverage** | 23 assertions in `qa/regression.mjs` (`npm run test:regression`); animation feel still manual |
+| **Test Coverage** | 29 assertions (including a phone-sized pass) in `qa/regression.mjs` (`npm run test:regression`); animation feel still manual |
 | **Build Time** | ~2s (Vite) |
 | **Bundle Size** | ~150KB (unminified, ~50KB minified) |
 
@@ -167,7 +156,7 @@ Known non-blocking issues:
 - All core mechanics tested in browser
 - Golden path verified
 - Edge cases handled (edge clamping, physics settling)
-- Automated regression suite: `npm run test:regression` (headless, 23 assertions, exits non-zero on failure)
+- Automated regression suite: `npm run test:regression` (headless, 29 assertions, exits non-zero on failure)
 - Animation feel (timing, easing) still checked by eye — not automatable in any useful way
 
 ✅ **Performance**

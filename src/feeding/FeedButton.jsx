@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { PAPER_LIGHT, PAPER_BORDER, PAPER_MEDIUM, PAPER_FOLD, PAPER_CREASE, TEXT_LABEL } from "../constants/colors";
+import { TOUCH_TARGET_MIN_PX } from "../constants/layout";
 
 const STYLES = `
 @keyframes fbFloat {
@@ -11,10 +12,19 @@ const STYLES = `
   cursor: pointer;
   user-select: none;
   -webkit-user-select: none;
+  /* Padding rather than a bigger icon: the hit area reaches the touch minimum
+     while the button keeps its size */
+  padding: ${(TOUCH_TARGET_MIN_PX - 36) / 2}px;
+  min-width: ${TOUCH_TARGET_MIN_PX}px;
+  min-height: ${TOUCH_TARGET_MIN_PX}px;
+  box-sizing: content-box;
 }
-.fb-wrap:hover .fb-svg {
-  transform: scale(1.1);
-  transition: transform 200ms ease;
+/* Guarded: a tapped :hover sticks on touch, leaving the button stuck enlarged */
+@media (hover: hover) {
+  .fb-wrap:hover .fb-svg {
+    transform: scale(1.1);
+    transition: transform 200ms ease;
+  }
 }
 .fb-svg {
   display: block;
@@ -32,8 +42,8 @@ const STYLES = `
   transition: opacity 200ms ease;
   white-space: nowrap;
 }
-.fb-wrap:hover .fb-label {
-  opacity: 1;
+@media (hover: hover) {
+  .fb-wrap:hover .fb-label { opacity: 1; }
 }
 `;
 

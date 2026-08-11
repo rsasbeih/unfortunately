@@ -64,7 +64,9 @@ export default function CrumpledBall({ initialPos, onThrow, onDrop }) {
 
     rafId.current = requestAnimationFrame(frame);
 
-    const onMouseMove = (e) => {
+    // Pointer events, not mouse events: a touch device fires no mousemove at
+    // all, so the ball never tracked the finger and every throw became a drop.
+    const onPointerMove = (e) => {
       const now = Date.now();
       targetX.current = e.clientX - 28;
       targetY.current = e.clientY - 28;
@@ -96,16 +98,18 @@ export default function CrumpledBall({ initialPos, onThrow, onDrop }) {
       onDrop({ x: cx, y: cy });
     };
 
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('pointerup',  onPointerUp);
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup',   onPointerUp);
+    window.addEventListener('pointercancel', onPointerUp);
 
     const particleTimer = setTimeout(() => setShowParticle(false), 900);
 
     return () => {
       mounted.current = false;
       cancelAnimationFrame(rafId.current);
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('pointerup',  onPointerUp);
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup',   onPointerUp);
+      window.removeEventListener('pointercancel', onPointerUp);
       clearTimeout(particleTimer);
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps

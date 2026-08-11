@@ -147,57 +147,7 @@ The meta-goal: prove you can build a complete game loop entirely in the frontend
 
 ### 🚧 Planned (In Priority Order)
 
-#### 1. Petting Mechanic
-
-**Feature:** User can pet blob to trigger a happy expression without feeding
-
-**Desktop Interaction:**
-- Click on blob → starts petting animation
-- Multiple clicks continue petting
-- Triggers different happy expression (distinct from eating-happy)
-
-**Mobile Interaction:**
-- Long-press on blob → starts petting animation
-- Drag while holding to continue petting
-
-**Implementation:**
-- New animation state: "petting"
-- Different facial expression during petting vs eating
-- Haptic feedback on mobile (optional future enhancement)
-
-#### 2. Color Picker (Settings)
-
-**UI:**
-- Settings button in top-right corner
-- Opens color picker modal/overlay (game continues running)
-- Simple hue slider (0–359) or color input
-
-**Behavior:**
-- User selects or inputs hue value
-- App immediately recalculates all blob colors from that hue
-- New hue saves to localStorage (overwrites old value, no history needed)
-- Optional: preset color palette for quick selection
-
-**Implementation:**
-- Settings button component
-- Color picker component
-- Real-time color preview on blob
-
-#### 3. Mobile Optimization
-
-**Current Issues:**
-- Not touch-friendly for throwing mechanic
-- UI elements may be too small on mobile
-- Scaling/responsiveness untested
-
-**Changes Needed:**
-- Touch-drag throwing (replace mouse drag, or support both)
-- Responsive layout for small screens
-- Test on various mobile devices
-
-**Design Decision:** Blob size stays at 0.5 default (don't shrink for mobile)
-
-#### 4. Blob Squashing at Screen Edges
+#### 1. Blob Squashing at Screen Edges
 
 **Visual Effect:** When blob grows so large it exceeds screen bounds, it visibly squashes/gets squeezed by the four edges
 
@@ -207,7 +157,6 @@ The meta-goal: prove you can build a complete game loop entirely in the frontend
 - Design decision pending: gradual squeeze vs snap to max size
 
 ---
-
 ### 💡 Future Considerations (No Implementation Yet)
 
 #### Multiple Pets (Cool idea, but not now)
@@ -470,8 +419,8 @@ Mobile:
 
 ### Current Approach
 
-- Automated regression suite: `npm run test:regression` (`qa/regression.mjs`), headless Playwright, 14 assertions, exits non-zero on failure. Requires `npm run dev` running
-- Covers: boot, color picker → blob repaint, the full throw → settle → pursue → eat → grow chain, persistence across reload, console errors
+- Automated regression suite: `npm run test:regression` (`qa/regression.mjs`), headless Playwright, 29 assertions, exits non-zero on failure. Requires `npm run dev` running
+- Covers: boot, color picker → blob repaint, petting, the full throw → settle → pursue → eat → grow chain, persistence across reload, console errors, and a phone-sized pass (layout fits, touch targets, touch drag throws)
 - Run it after every feature, and add a case for whatever the feature added
 - Animation feel (timing, easing, juice) is still checked by eye — the suite deliberately asserts on durable state, not frame-level timing, so it stays non-flaky
 

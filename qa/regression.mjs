@@ -1,6 +1,7 @@
 /** Headless end-to-end regression test: run after every feature to prove the existing ones still work. */
-import { chromium } from 'playwright';
+import { chromium, devices } from 'playwright';
 import { PET_HEART_MAX_CONCURRENT } from '../src/constants/petting.js';
+import { TOUCH_TARGET_MIN_PX } from '../src/constants/layout.js';
 
 const BASE_URL = process.env.REGRESSION_URL ?? 'http://localhost:5173/unfortunately/';
 
@@ -50,6 +51,73 @@ async function throwBall(page) {
     await page.waitForTimeout(16);
   }
   await page.mouse.up();
+}
+
+/** Phone-sized pass: layout must fit, and a touch drag must throw rather than drop. */
+async function runMobileChecks(browser) {
+  const context = await browser.newContext({ ...devices['iPhone 13'] });
+  const page = await context.newPage();
+  const mobileErrors = [];
+  page.on('pageerror', (e) => mobileErrors.push(e.message));
+
+  try {
+    await page.goto(BASE_URL, { waitUntil: 'networkidle' });
+    await page.waitForTimeout(1500);
+    const { width: vw } = page.viewportSize();
+
+    check('blob renders on a phone', (await page.locator('svg.monster').count()) === 1);
+    check(
+      'no horizontal overflow',
+      (await page.evaluate(() => document.documentElement.scrollWidth)) <= vw,
+    );
+
+    const gear = await page.locator('.cp-gear').boundingBox();
+    check(
+      'settings gear meets the touch minimum',
+      gear.width >= TOUCH_TARGET_MIN_PX,
+      `${Math.round(gear.width)}px vs ${TOUCH_TARGET_MIN_PX}px`,
+    );
+
+    // The compose panel used to be a fixed 400px, wider than the phone itself
+    await page.tap('.fb-wrap', { force: true });
+    await page.waitForSelector('textarea', { timeout: 5000 });
+    const paper = await page.locator('.pu-paper').boundingBox();
+    check(
+      'compose panel fits the screen',
+      paper.x >= 0 && paper.x + paper.width <= vw,
+      `x=${Math.round(paper.x)} w=${Math.round(paper.width)} vw=${vw}`,
+    );
+
+    // A touch drag must throw. Touch fires no mousemove, so tracking the pointer
+    // is the difference between a throw and the ball dropping where you tapped.
+    await page.locator('textarea').fill('we regret to inform you');
+    await page.tap('.pu-stamp', { force: true });
+    await page.waitForTimeout(350);
+
+    await page.evaluate(async () => {
+      const fire = (type, x, y) => window.dispatchEvent(new PointerEvent(type, {
+        pointerType: 'touch', clientX: x, clientY: y, bubbles: true, isPrimary: true,
+      }));
+      const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+      fire('pointerdown', 80, 520);
+      for (let i = 1; i <= 8; i++) { fire('pointermove', 80 + i * 30, 520 - i * 22); await sleep(16); }
+      fire('pointerup', 320, 344);
+    });
+
+    // ProjectileBall only mounts for a genuine throw. Below the velocity
+    // threshold the flow goes straight from HOLDING to LANDED and it never
+    // exists, so its presence is exactly the throw-versus-drop distinction.
+    // Don't assert on position: a dropped ball also sits away from the release
+    // point, and other phases render their own 56px circles.
+    const threw = await waitFor(async () => (await page.locator('.pb-ball').count()) > 0, 3000, 60);
+    check('touch drag throws the ball rather than dropping it', threw === true);
+
+    check('no console or page errors on mobile', mobileErrors.length === 0, mobileErrors.join(' | '));
+  } catch (error) {
+    check('mobile pass ran to completion', false, error.message);
+  } finally {
+    await context.close();
+  }
 }
 
 async function run() {
@@ -232,6 +300,10 @@ async function run() {
     // ── 6. Nothing threw along the way ──
     console.log('\nConsole');
     check('no console or page errors', consoleErrors.length === 0, consoleErrors.join(' | '));
+
+    // ── 7. The same app on a phone ──
+    console.log('\nMobile');
+    await runMobileChecks(browser);
   } catch (error) {
     check('suite ran to completion', false, error.message);
   } finally {
