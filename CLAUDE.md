@@ -73,9 +73,9 @@ A React + Vite app featuring an animated blob monster built entirely in SVG.
 - Color picker was listed as unbuilt; it shipped in PR #6
 
 **Repo hygiene**:
-- QA scripts moved from the repo root into `qa/`
 - QA outputs (screenshots, `qa-results.json`) untracked and gitignored — they are regenerable
-- `qa_eat.cjs` wrote screenshots to a hardcoded Windows temp path from an old session; repointed to `qa/output/`
+- The four root-level QA scripts were **deleted**. An audit found none of them were tests: no assertions, no failure exit codes, not wired to any npm script or workflow, three of four hardcoded a stale `localhost:5174`, three of four required a visible browser, and several steps in `qa_test_run.mjs` pushed `status: 'PASS'` unconditionally after a fixed `waitForTimeout`. `qa_test_verify_persistence.mjs` still asserted the deleted `>= 1.0` size guard
+- Replaced with a single real one: `qa/regression.mjs` (see Testing below)
 
 **Known remaining drift**: the SVG still carries `className="monster"` with no CSS rule behind it, and `FeedingMechanic` passes `monsterPos`/`monsterSvgPx`/`monsterSize` props to `ProjectileBall` and `CrumpledBall` that neither component declares. Both are harmless leftovers, left alone to keep this change docs-and-files-only.
 
@@ -162,11 +162,12 @@ A React + Vite app featuring an animated blob monster built entirely in SVG.
 - Push immediately after committing
 
 ### Testing & QA
-- **Always** test UI changes in browser before marking complete
-- Test golden path (happy case) AND edge cases
-- Monitor for regressions in existing features
-- Don't just check that code compiles — verify behavior in actual app
-- Screenshot or describe the result
+- **Run `npm run test:regression` after every feature, before committing.** Needs `npm run dev` already running. Headless, ~25s, exits non-zero on failure
+- It covers the *existing* features end to end: boot, color picker → blob repaint, the full compose → crumple → throw → settle → pursue → eat → grow chain, persistence across reload, and zero console errors
+- The growth check is the load-bearing one — `monsterSize` only increases in `localStorage` if the entire feeding chain completed, so one assertion guards the whole mechanic
+- **Add a case to `qa/regression.mjs` when you ship a feature**, so the next feature can't silently break it
+- The suite does not cover animation *feel* (timing, easing, juice). That still needs eyes on the real app — screenshot or describe the result
+- Never write a check that reports PASS without asserting something. The previous QA scripts did exactly that and were deleted for it
 
 ### Code Quality
 - **One-liner JSDoc headers**: Every `.jsx` and `.js` file starts with purpose description
