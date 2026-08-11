@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { PAPER_MAX_WIDTH_PX, PAPER_MAX_HEIGHT_PX, PAPER_EDGE_GAP_PX } from "../constants/layout";
 
 const STYLES = `
 @keyframes puSlideIn {
@@ -35,7 +36,14 @@ const STYLES = `
   font-family: inherit;
   line-height: 1;
 }
-.pu-stamp:hover {
+/* Guarded: a tapped :hover sticks on touch, leaving the stamp inverted */
+@media (hover: hover) {
+  .pu-stamp:hover {
+    background: #c0392b;
+    color: #fff;
+  }
+}
+.pu-stamp:active {
   background: #c0392b;
   color: #fff;
 }
@@ -110,9 +118,11 @@ export default function PaperUI({ onCrumple, onCancel }) {
         style={{
           position: "fixed",
           bottom: 70,
-          right: 24,
-          width: 400,
-          height: 300,
+          right: PAPER_EDGE_GAP_PX,
+          // Never wider than the screen minus a gap on each side, so the panel
+          // cannot hang off a narrow phone
+          width:  `min(${PAPER_MAX_WIDTH_PX}px, calc(100vw - ${PAPER_EDGE_GAP_PX * 2}px))`,
+          height: `min(${PAPER_MAX_HEIGHT_PX}px, 45vh)`,
           background,
           boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
           // Torn top edge via clip-path

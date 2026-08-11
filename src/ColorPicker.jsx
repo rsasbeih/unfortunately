@@ -1,6 +1,7 @@
 /** Settings button + panel letting the user change the blob's hue via a slider. */
 import { useState } from "react";
 import { PAPER_LIGHT, PAPER_BORDER, TEXT_LABEL } from "./constants/colors";
+import { MOBILE_BREAKPOINT_PX, TOUCH_TARGET_MIN_PX, PAPER_EDGE_GAP_PX } from "./constants/layout";
 
 const STYLES = `
 .cp-gear {
@@ -9,8 +10,10 @@ const STYLES = `
   -webkit-user-select: none;
   transition: transform 200ms ease;
 }
-.cp-gear:hover {
-  transform: rotate(30deg);
+/* Guarded: on a touch screen a tapped :hover sticks until you tap elsewhere,
+   leaving the gear permanently rotated */
+@media (hover: hover) {
+  .cp-gear:hover { transform: rotate(30deg); }
 }
 .cp-panel {
   font-family: monospace;
@@ -40,6 +43,24 @@ const STYLES = `
   background: #fff;
   border: 2px solid #888;
   cursor: pointer;
+}
+
+@media (max-width: ${MOBILE_BREAKPOINT_PX}px) {
+  /* Reach the touch minimum, and let the slider use the width it has */
+  .cp-gear {
+    width:  ${TOUCH_TARGET_MIN_PX}px !important;
+    height: ${TOUCH_TARGET_MIN_PX}px !important;
+  }
+  .cp-slider {
+    width: 100%;
+    height: 14px;
+  }
+  .cp-slider::-webkit-slider-thumb { width: 26px; height: 26px; }
+  .cp-slider::-moz-range-thumb     { width: 26px; height: 26px; }
+  .cp-panel {
+    max-width: calc(100vw - ${PAPER_EDGE_GAP_PX * 2}px);
+    box-sizing: border-box;
+  }
 }
 `;
 

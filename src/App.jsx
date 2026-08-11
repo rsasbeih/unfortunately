@@ -4,6 +4,8 @@ import MonsterHop from "./MonsterHop";
 import FeedingMechanic from "./feeding/FeedingMechanic";
 import ColorPicker from "./ColorPicker";
 import { PaperPhase } from "./constants/paperPhase";
+import { SVG_BASE_SIZE } from "./constants/sizes";
+import { CELEBRATION_HEART_SIZE_RATIO, CELEBRATION_HEART_SPREAD_RATIO } from "./constants/layout";
 function App() {
   const [feedPhase, setFeedPhase] = useState(PaperPhase.IDLE);
   const [monsterPos, setMonsterPos] = useState({ x: 0, y: 0 });
@@ -69,16 +71,19 @@ function App() {
       />
       {celebrationBurst > 0 &&
         Array.from({ length: 3 }).map((_, i) => {
-          let driftX = (i - 1) * 100 * monsterSize;
-          let driftY = i === 1 ? -30 : -15;
+          // Everything scales off the blob so the burst stays in proportion on a
+          // small screen instead of hearts nearly the width of the body
+          const svgPx  = SVG_BASE_SIZE * monsterSize;
+          const driftX = (i - 1) * svgPx * CELEBRATION_HEART_SPREAD_RATIO;
+          const driftY = (i === 1 ? -0.15 : -0.075) * svgPx;
           return (
             <div
               key={`${celebrationBurst}-${i}`}
               style={{
                 position: "fixed",
-                left: monsterPos.x + 100 * monsterSize + driftX,
+                left: monsterPos.x + svgPx / 2 + driftX,
                 top: monsterPos.y + driftY,
-                fontSize: "44px",
+                fontSize: svgPx * CELEBRATION_HEART_SIZE_RATIO,
                 pointerEvents: "none",
                 zIndex: 10000,
                 animation: `heartBurst 3s ease-out forwards`,

@@ -123,6 +123,7 @@ export default function ProjectileBall({ startPos, startVelocity, onLand }) {
   return (
     <div
       ref={ballRef}
+      className="pb-ball"
       style={{
         position:  'fixed',
         width:      BALL_SIZE,

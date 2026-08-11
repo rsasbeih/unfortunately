@@ -25,8 +25,8 @@ export default function FeedingMechanic({
     const track = (e) => {
       lastMouse.current = { x: e.clientX, y: e.clientY };
     };
-    window.addEventListener("mousemove", track);
-    return () => window.removeEventListener("mousemove", track);
+    window.addEventListener("pointermove", track);
+    return () => window.removeEventListener("pointermove", track);
   }, []);
 
   const handleThrow = (vel) => {
