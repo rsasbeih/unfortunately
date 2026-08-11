@@ -63,6 +63,7 @@ function App() {
         foodTarget={feedPhase === PaperPhase.LANDED ? foodLandPos : null}
         isEating={feedPhase === PaperPhase.BEING_EATEN}
         isCelebrating={isCelebrating}
+        canPet={feedPhase === PaperPhase.IDLE}
         onFoodArrived={handleFoodArrived}
         onEatComplete={handleEatComplete}
       />

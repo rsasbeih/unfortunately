@@ -38,6 +38,16 @@ A React + Vite app featuring an animated blob monster built entirely in SVG.
 - `mhGulp` (600ms) then `mhShimmy` (500ms) play on eating; `heartBurst` (3s) lives in `App.jsx`
 - `transform-origin: center bottom` on the animated wrapper so squash anchors to the feet
 
+### Petting (`MonsterHop.jsx` + `src/constants/petting.js`)
+- Nintendogs model: the blob reacts to a pointer held down **and moving**. Hold still and the reaction decays even with the button down
+- **Lean** — the body chases the pointer's horizontal offset, damped at `PET_LEAN_DAMPING` per frame so it trails a beat behind rather than snapping. Offset is `PET_LEAN_WIDTH_RATIO` of the blob's own rendered width, so the gesture reads the same at every size
+- **Shimmy** — `mhPetShimmy` runs only while actively rubbing. Its shift is a *percentage* of the blob's width, so it scales with the body without size math
+- **Pleased face** — contented squint plus blush, deliberately flatter and wider than the celebration smile so the two read apart. Follows the rubbing, not the press: stop moving and it fades after `PET_EXPRESSION_HOLD_MS`, while the lean stays, since a motionless finger is still touching the blob
+- **Freeze + linger** — wandering stops on touch and resumes `PET_LINGER_MS` after release
+- Three nested transform layers, because a CSS animation would overwrite an inline transform: hop keyframes → JS lean → CSS shimmy → svg
+- Blocked unless `feedPhase` is IDLE and the blob is neither eating nor celebrating. Pointer events, so touch works
+- Session-only: no growth, nothing persisted
+
 ### Feeding Mechanic
 - **Ball throwing**: Drag to aim, release to throw. Ball bounces across the entire screen with physics-based gravity fade over bounces.
 - **Ball physics** (`ProjectileBall.jsx`):
@@ -79,7 +89,7 @@ A React + Vite app featuring an animated blob monster built entirely in SVG.
 ### Feature: Celebration Animation
 **What was added**: After the monster finishes eating:
 1. **Joy jumps** — Monster does 3 celebration jumps (700ms spacing) while staying in place
-2. **Smiling expression** — Mouth curves up during celebration, then returns to neutral
+2. **Smiling expression** — the eyes curve into arcs during celebration, then return to neutral dots. The blob has no mouth
 3. **Heart bursts** — 3 hearts burst upward with each jump (12 total: initial burst + 3 jumps × 3 hearts each)
    - Hearts spread horizontally around monster center (`(i - 1) * 100 * monsterSize`), middle heart sits slightly higher
    - Staggered 20ms delays per heart for a light cascade
@@ -182,7 +192,6 @@ A React + Vite app featuring an animated blob monster built entirely in SVG.
 - **No manual deploys**: Workflow handles everything
 
 ## Planned / not yet done
-- Petting mechanic (click/long-press to pet blob)
 - Mobile optimization (touch-friendly throwing)
 - Blob squashing at screen edges
 - Additional expressions/states (future)

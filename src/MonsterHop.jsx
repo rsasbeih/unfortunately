@@ -1,6 +1,20 @@
 import { useState, useEffect, useRef } from "react";
 import { EatPhase } from "./constants/eatPhases";
 import { SVG_BASE_SIZE } from "./constants/sizes";
+import { BLUSH_COLOR } from "./constants/colors";
+import {
+  PET_LEAN_WIDTH_RATIO,
+  PET_LEAN_DAMPING,
+  PET_LEAN_SKEW_DEG,
+  PET_PRESS_SQUASH,
+  PET_MOTION_WINDOW_MS,
+  PET_SHIMMY_MS,
+  PET_SHIMMY_SHIFT_PCT,
+  PET_SHIMMY_SQUASH,
+  PET_BLUSH_FADE_MS,
+  PET_EXPRESSION_HOLD_MS,
+  PET_LINGER_MS,
+} from "./constants/petting";
 
 const STEP     = 90;
 const ARC_H    = 18;
@@ -55,6 +69,19 @@ const STYLES = `
 
 .mh-gulp   { animation: mhGulp   600ms ease-in-out forwards; }
 .mh-shimmy { animation: mhShimmy 500ms ease-in-out forwards; }
+
+/* Petting shimmy. Shift is a percentage of the blob's own width, so it scales
+   with the body without any size math. */
+@keyframes mhPetShimmy {
+  0%   { transform: translateX(0)                          scaleX(1); }
+  25%  { transform: translateX(${PET_SHIMMY_SHIFT_PCT}%)   scaleX(${1 - PET_SHIMMY_SQUASH}); }
+  50%  { transform: translateX(0)                          scaleX(1); }
+  75%  { transform: translateX(-${PET_SHIMMY_SHIFT_PCT}%)  scaleX(${1 + PET_SHIMMY_SQUASH}); }
+  100% { transform: translateX(0)                          scaleX(1); }
+}
+.mh-pet-shimmy { animation: mhPetShimmy ${PET_SHIMMY_MS}ms ease-in-out infinite; }
+
+.mh-blush { transition: opacity ${PET_BLUSH_FADE_MS}ms ease; }
 `;
 
 export default function MonsterHop({
@@ -65,6 +92,7 @@ export default function MonsterHop({
   onFoodArrived  = null,
   isEating       = false,
   isCelebrating  = false,
+  canPet         = true,
   onEatComplete  = null,
 }) {
   const svgPx = SVG_BASE_SIZE * size;
@@ -88,6 +116,16 @@ export default function MonsterHop({
   const [eatPhase,     setEatPhase]     = useState(EatPhase.NONE);
   const [eatKey,       setEatKey]       = useState(0);
   const [celebrationJumpsLeft, setCelebrationJumpsLeft] = useState(0);
+  const [isRubbing,    setIsRubbing]    = useState(false); // pointer down AND recently moved
+  const [isPleased,    setIsPleased]    = useState(false); // squint + blush; outlasts the rub
+
+  const leanRef        = useRef(null); // the layer the lean transform is written to
+  const isPettingRef   = useRef(false);
+  const lastMoveAtRef  = useRef(0);
+  const leanRafRef     = useRef(null);
+  const leanRef_value  = useRef(0);    // current lean, chases targetLeanRef
+  const targetLeanRef  = useRef(0);    // -1..1, where the pointer sits across the body
+  const pleasedTimerRef = useRef(null);
 
   const timers        = useRef([]);
   const isPaused      = useRef(false);
@@ -265,6 +303,126 @@ export default function MonsterHop({
     prevIsCelebrating.current = isCelebrating;
   }, [isCelebrating]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ── Petting ───────────────────────────────────────────────────────────────
+  // Nintendogs model: the blob reacts while the pointer is held *and* moving.
+  // Hold still and the shimmy stops even though the button is still down.
+  const petAllowed = canPet && !isEating && !isCelebrating;
+
+  // Geometry read inside long-lived listeners, which would otherwise close over
+  // a stale svgPx once the blob grows.
+  const svgPxRef = useRef(svgPx);
+  svgPxRef.current = svgPx;
+
+  const writeLeanTransform = () => {
+    const el = leanRef.current;
+    if (!el) return;
+    const lean     = leanRef_value.current;
+    const offsetPx = lean * svgPxRef.current * PET_LEAN_WIDTH_RATIO;
+    const skewDeg  = -lean * PET_LEAN_SKEW_DEG; // negative tips the top toward the pointer
+    const squash   = isPettingRef.current ? 1 - PET_PRESS_SQUASH : 1;
+    el.style.transform = `translateX(${offsetPx}px) skewX(${skewDeg}deg) scaleY(${squash})`;
+  };
+
+  const runLeanFrame = () => {
+    const target = isPettingRef.current ? targetLeanRef.current : 0;
+    leanRef_value.current += (target - leanRef_value.current) * PET_LEAN_DAMPING;
+
+    const rubbing =
+      isPettingRef.current && Date.now() - lastMoveAtRef.current < PET_MOTION_WINDOW_MS;
+    setIsRubbing(prev => (prev === rubbing ? prev : rubbing));
+
+    writeLeanTransform();
+
+    // Once released, keep running until the lean has drifted back to neutral
+    if (!isPettingRef.current && Math.abs(leanRef_value.current) < 0.005) {
+      leanRef_value.current = 0;
+      writeLeanTransform();
+      leanRafRef.current = null;
+      return;
+    }
+    leanRafRef.current = requestAnimationFrame(runLeanFrame);
+  };
+
+  const aimLeanAt = (clientX) => {
+    const centerX = posRef.current.x + svgPxRef.current / 2;
+    targetLeanRef.current = clamp((clientX - centerX) / (svgPxRef.current / 2), -1, 1);
+  };
+
+  const startPet = (e) => {
+    if (!petAllowed || isPettingRef.current) return;
+    isPettingRef.current = true;
+    isPaused.current     = true;
+    clearAllTimers(); // drop the wander so the blob holds still to be petted
+
+    setEyeShift(0);
+
+    // Not setting the pleased face here — it is driven by rubbing, below
+    lastMoveAtRef.current = Date.now();
+    aimLeanAt(e.clientX);
+    if (!leanRafRef.current) leanRafRef.current = requestAnimationFrame(runLeanFrame);
+  };
+
+  const endPet = () => {
+    if (!isPettingRef.current) return;
+    isPettingRef.current = false;
+    setIsRubbing(false);
+
+    // Sit a beat longer before wandering off again
+    const id = setTimeout(() => {
+      isPaused.current = false;
+      doHopSequence(posRef.current, randPos());
+    }, PET_LINGER_MS);
+    timers.current.push(id);
+  };
+
+  // Listeners live on window so a fast rub that outruns the cursor still counts.
+  // Held in refs because this effect is mount-only.
+  const endPetRef  = useRef(endPet);
+  const aimLeanRef = useRef(aimLeanAt);
+  endPetRef.current  = endPet;
+  aimLeanRef.current = aimLeanAt;
+
+  useEffect(() => {
+    const onMove = (e) => {
+      if (!isPettingRef.current) return;
+      lastMoveAtRef.current = Date.now();
+      aimLeanRef.current(e.clientX);
+    };
+    const onRelease = () => endPetRef.current();
+
+    window.addEventListener("pointermove",   onMove);
+    window.addEventListener("pointerup",     onRelease);
+    window.addEventListener("pointercancel", onRelease);
+    return () => {
+      window.removeEventListener("pointermove",   onMove);
+      window.removeEventListener("pointerup",     onRelease);
+      window.removeEventListener("pointercancel", onRelease);
+      if (leanRafRef.current)      cancelAnimationFrame(leanRafRef.current);
+      if (pleasedTimerRef.current) clearTimeout(pleasedTimerRef.current);
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // The pleased face tracks the *rubbing*, not the press, so holding the pointer
+  // still lets the expression fade the same way the shimmy does. The lean stays,
+  // since a motionless finger is still touching the blob.
+  useEffect(() => {
+    if (pleasedTimerRef.current) clearTimeout(pleasedTimerRef.current);
+    if (isRubbing) {
+      setIsPleased(true);
+    } else {
+      pleasedTimerRef.current = setTimeout(() => setIsPleased(false), PET_EXPRESSION_HOLD_MS);
+    }
+  }, [isRubbing]);
+
+  // Feeding or celebrating takes the blob back; drop any pet in progress
+  useEffect(() => {
+    if (!petAllowed && isPettingRef.current) {
+      isPettingRef.current = false;
+      setIsRubbing(false);
+      setIsPleased(false);
+    }
+  }, [petAllowed]);
+
   // Fixed light source at top-center of screen. Compute which direction
   // the blob is "looking toward" the light, then shift the gloss that way.
   // lnx: +1 when blob is at far left (light to its right), -1 at far right
@@ -276,17 +434,28 @@ export default function MonsterHop({
 
   const lEye = 68  + eyeShift;
   const rEye = 128 + eyeShift;
-  const eyes = isSmiling ? (
+
+  // Three faces: pleased (petting) is a wide contented squint, deliberately
+  // flatter and broader than the celebration smile so the two read apart.
+  const pleasedEyes = (
+    <>
+      <path d="M 56,96 A 11,7 0 0,1 80,96"   fill="none" stroke="#000" strokeWidth="4" strokeLinecap="round" />
+      <path d="M 116,94 A 11,7 0 0,1 140,94" fill="none" stroke="#000" strokeWidth="4" strokeLinecap="round" />
+    </>
+  );
+  const smilingEyes = (
     <>
       <path d="M 62,95 A 6,6 0 0,1 74,95"   fill="none" stroke="#000" strokeWidth="3.5" strokeLinecap="round" />
       <path d="M 122,93 A 6,6 0 0,1 134,93" fill="none" stroke="#000" strokeWidth="3.5" strokeLinecap="round" />
     </>
-  ) : (
+  );
+  const neutralEyes = (
     <>
       <circle cx={lEye} cy="92" r="6" fill="#000" />
       <circle cx={rEye} cy="90" r="6" fill="#000" />
     </>
   );
+  const eyes = isPleased ? pleasedEyes : isSmiling ? smilingEyes : neutralEyes;
 
   const shadowW = svgPx * 0.72;
   const shadowH = Math.max(4, svgPx * 0.04);
@@ -316,7 +485,7 @@ export default function MonsterHop({
         </div>
 
         {/* Blob — one div handles arc + stretch + squash + jello all in one keyframe */}
-        <div style={{
+        <div className="mh-position" style={{
           position:   "absolute",
           left:        pos.x,
           top:         pos.y,
@@ -327,7 +496,24 @@ export default function MonsterHop({
             className={eatPhase !== EatPhase.NONE ? eatClass : (hopKey > 0 ? "mh-hop" : "")}
             style={{ transformOrigin: "center bottom" }}
           >
-              <svg className="monster" width={svgPx} height={svgPx} viewBox={`0 0 ${SVG_BASE_SIZE} ${SVG_BASE_SIZE}`}>
+            {/* Lean rides inside the hop so the two compose; the shimmy gets its
+                own layer because a CSS animation would overwrite the inline lean */}
+            <div ref={leanRef} style={{ transformOrigin: "center bottom", willChange: "transform" }}>
+              <div
+                className={isRubbing ? "mh-pet-shimmy" : ""}
+                style={{ transformOrigin: "center bottom" }}
+              >
+              <svg
+                className="monster"
+                width={svgPx} height={svgPx}
+                viewBox={`0 0 ${SVG_BASE_SIZE} ${SVG_BASE_SIZE}`}
+                onPointerDown={startPet}
+                style={{
+                  pointerEvents: petAllowed ? "auto" : "none",
+                  touchAction:   "none", // stop touch-drag from scrolling the page mid-pet
+                  cursor:        petAllowed ? "grab" : "default",
+                }}
+              >
                 <defs>
                   <linearGradient id="mhBg" x1="100" y1="25" x2="100" y2="180" gradientUnits="userSpaceOnUse">
                     <stop offset="0%"   stopColor={bodyLight} />
@@ -345,8 +531,14 @@ export default function MonsterHop({
                 <ellipse cx="90" cy="162" rx="62" ry="20" fill={glowColor}  opacity="0.35" filter="url(#mhF1)" clipPath="url(#mhC)" />
                 <ellipse cx={glossX}      cy={glossY}      rx="32" ry="24" fill={glossColor} opacity="0.6"  filter="url(#mhF2)" clipPath="url(#mhC)" />
                 <ellipse cx={glossX - 4} cy={glossY - 4}  rx="14" ry="10" fill={glossColor} opacity="0.95" filter="url(#mhF3)" clipPath="url(#mhC)" />
+                <ellipse className="mh-blush" cx="44"  cy="118" rx="15" ry="9" fill={BLUSH_COLOR}
+                         opacity={isPleased ? 0.5 : 0} filter="url(#mhF3)" clipPath="url(#mhC)" />
+                <ellipse className="mh-blush" cx="156" cy="116" rx="15" ry="9" fill={BLUSH_COLOR}
+                         opacity={isPleased ? 0.5 : 0} filter="url(#mhF3)" clipPath="url(#mhC)" />
                 {eyes}
               </svg>
+              </div>
+            </div>
           </div>
         </div>
 

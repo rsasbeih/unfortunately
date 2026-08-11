@@ -187,11 +187,28 @@ Do NOT use this skill for:
   - You can't diagnose the visual issue
   - Visual looks good but design doesn't match spec
 
+**The Iteration Loop (do this, don't skip to Phase 5):**
+
+Building it once and showing the first result is not the workflow. Capture, judge, fix, repeat:
+
+1. Drive the feature in a real browser and capture the moments that matter — not one screenshot, a sequence. For anything animated, capture several frames across the animation so you can see the motion, not just its resting state
+2. Actually look at each frame and say what is wrong with it. "Looks fine" after one glance is not an evaluation
+3. Fix the worst thing you found
+4. Re-capture and compare against the previous round
+
+**Expect three to four rounds before it is good.** One round means you did not look hard enough. Round one is usually "it works but the numbers are wrong" — too fast, too subtle, too far. That is normal and is what the loop is for.
+
+**Report each round to the user** — what you saw, what you changed, what round you are on. Do not silently iterate and present only the final result; the user cannot judge your taste against theirs if they only see the endpoint.
+
+**Escalate early when you are unsure.** If after three or four rounds you cannot tell whether it is right — or you are choosing between two versions that both look defensible — stop and ask, with the frames side by side. Guessing at someone else's taste for another five rounds wastes everyone's time. Uncertainty is a reason to ask, not to keep grinding.
+
+**Run `npm run test:regression` before showing the user.** A feature that looks right but broke throwing or persistence is not done.
+
 **Success Criteria:**
+- Multiple rounds of capture → evaluate → fix, with each round described to the user
 - Screenshots show feature working as intended
-- No visual issues in any screenshot
-- No regressions visible in existing feature screenshots
-- Ready to show user for final approval
+- Regression suite green
+- Ready to show user for final approval on *feel*, which is the one thing screenshots cannot settle
 
 ### Phase 5: Show User & Iterate on Feedback
 
