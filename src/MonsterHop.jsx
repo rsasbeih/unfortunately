@@ -7,6 +7,11 @@ const ARC_H    = 18;
 const HOP_MS   = 280;   // time blob is in the air
 const TOTAL_MS = 980;   // hop + jello recovery (same keyframe)
 const MARGIN   = 50;
+const EDGE_SQUEEZE = 0.7; // How strongly edge pressure reduces the matching axis.
+const EDGE_MIN_SCALE = 0.6; // Keep the blob visible even when the viewport is tiny.
+const EDGE_MAX_SCALE = 1.15; // Let the opposite axis bulge a bit for the squeeze feel.
+const EDGE_CROSS_AXIS_COMPENSATION = 0.12; // Slight bulge on the opposite axis when squeezed.
+const EDGE_SQUEEZE_TRANSITION_MS = 180; // Gentle visual response when the viewport changes.
 
 // Arc peak is at 45% of HOP_MS = 126ms → 126/980 ≈ 13% of TOTAL_MS
 // Landing is at 100% of HOP_MS = 280ms → 280/980 ≈ 29% of TOTAL_MS
@@ -87,7 +92,10 @@ export default function MonsterHop({
   const [hopKey,       setHopKey]       = useState(0);
   const [eatPhase,     setEatPhase]     = useState(EatPhase.NONE);
   const [eatKey,       setEatKey]       = useState(0);
-  const [celebrationJumpsLeft, setCelebrationJumpsLeft] = useState(0);
+  const [viewport, setViewport] = useState(() => ({
+    width: window.innerWidth,
+    height: window.innerHeight,
+  }));
 
   const timers        = useRef([]);
   const isPaused      = useRef(false);
@@ -109,6 +117,18 @@ export default function MonsterHop({
   useEffect(() => {
     foodTargetRef.current = foodTarget;
   }, [foodTarget]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setViewport({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Report position changes to parent
   const updatePos = (newPos) => {
@@ -239,7 +259,6 @@ export default function MonsterHop({
       isPaused.current = true;
       clearAllTimers();
       setIsSmiling(true);
-      setCelebrationJumpsLeft(3);
 
       const doCelebrationJump = (jumpsRemaining) => {
         setHopKey(k => k + 1);
@@ -253,7 +272,6 @@ export default function MonsterHop({
           const id = setTimeout(() => {
             setIsSmiling(false);
             isPaused.current = false;
-            setCelebrationJumpsLeft(0);
           }, 700);
           timers.current.push(id);
         }
@@ -269,7 +287,7 @@ export default function MonsterHop({
   // the blob is "looking toward" the light, then shift the gloss that way.
   // lnx: +1 when blob is at far left (light to its right), -1 at far right
   const blobCX = pos.x + svgPx / 2;
-  const lnx = (window.innerWidth / 2 - blobCX) / (window.innerWidth / 2);
+  const lnx = (viewport.width / 2 - blobCX) / (viewport.width / 2);
   // x shifts with light angle; y traces a shallow arc (higher at center, drops toward sides)
   const glossX = 100 + lnx * 35;
   const glossY = 52 + lnx * lnx * 14;
@@ -290,6 +308,12 @@ export default function MonsterHop({
 
   const shadowW = svgPx * 0.72;
   const shadowH = Math.max(4, svgPx * 0.04);
+  const widthOverflow = Math.max(0, -pos.x, pos.x + svgPx - viewport.width);
+  const heightOverflow = Math.max(0, -pos.y, pos.y + svgPx - viewport.height);
+  const widthPressure = widthOverflow / viewport.width;
+  const heightPressure = heightOverflow / viewport.height;
+  const edgeScaleX = clamp(1 - widthPressure * EDGE_SQUEEZE + heightPressure * EDGE_CROSS_AXIS_COMPENSATION, EDGE_MIN_SCALE, EDGE_MAX_SCALE);
+  const edgeScaleY = clamp(1 - heightPressure * EDGE_SQUEEZE + widthPressure * EDGE_CROSS_AXIS_COMPENSATION, EDGE_MIN_SCALE, EDGE_MAX_SCALE);
 
   // Determine eating animation class
   const eatClass = eatPhase === EatPhase.GULP ? 'mh-gulp' : eatPhase === EatPhase.SHIMMY ? 'mh-shimmy' : '';
@@ -320,13 +344,20 @@ export default function MonsterHop({
           position:   "absolute",
           left:        pos.x,
           top:         pos.y,
+          width:       svgPx,
+          height:      svgPx,
           transition: `left ${HOP_MS}ms ease-in-out, top ${HOP_MS}ms ease-in-out`,
         }}>
-          <div
-            key={eatPhase === EatPhase.NONE ? hopKey : `eat-${eatKey}`}
-            className={eatPhase !== EatPhase.NONE ? eatClass : (hopKey > 0 ? "mh-hop" : "")}
-            style={{ transformOrigin: "center bottom" }}
-          >
+          <div style={{
+            transform: `scale(${edgeScaleX}, ${edgeScaleY})`,
+            transformOrigin: "center bottom",
+            transition: `transform ${EDGE_SQUEEZE_TRANSITION_MS}ms ease-out`,
+          }}>
+            <div
+              key={eatPhase === EatPhase.NONE ? hopKey : `eat-${eatKey}`}
+              className={eatPhase !== EatPhase.NONE ? eatClass : (hopKey > 0 ? "mh-hop" : "")}
+              style={{ transformOrigin: "center bottom" }}
+            >
               <svg className="monster" width={svgPx} height={svgPx} viewBox={`0 0 ${SVG_BASE_SIZE} ${SVG_BASE_SIZE}`}>
                 <defs>
                   <linearGradient id="mhBg" x1="100" y1="25" x2="100" y2="180" gradientUnits="userSpaceOnUse">
@@ -347,6 +378,7 @@ export default function MonsterHop({
                 <ellipse cx={glossX - 4} cy={glossY - 4}  rx="14" ry="10" fill={glossColor} opacity="0.95" filter="url(#mhF3)" clipPath="url(#mhC)" />
                 {eyes}
               </svg>
+            </div>
           </div>
         </div>
 
