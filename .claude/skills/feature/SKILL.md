@@ -255,6 +255,17 @@ Building it once and showing the first result is not the workflow. Capture, judg
 
 **Goal:** Save the feature to git with proper authorship and clear commit message.
 
+**Update the four docs first — in this same commit, before you open a PR:**
+
+- `CLAUDE.md` — how it works now, for the next session
+- `SPEC.md` — move the feature out of Planned, record its numbers
+- `PROGRESS.md` — status, priorities, assertion count in the metrics table
+- `DECISIONS.md` — the calls you made and why, **including the options you rejected**
+
+`DECISIONS.md` is the one that gets skipped. If you picked between two defensible approaches, write it down with the alternative — otherwise the next session re-litigates it or silently reverses it. All four are present tense and describe the current state; a decision entry explains why the design *is* what it is, never the order in which you tried things.
+
+Not every change touches all four, but check all four every time, and tell the user which you updated.
+
 **Steps:**
 1. Stage changed files: `git add [files]`
 2. Write clear commit message:
@@ -437,6 +448,7 @@ This does not contradict reporting each iteration round to the user in Phase 4 �
 - [ ] Phase 4: Self-iterated on any visual issues visible in screenshots
 - [ ] Phase 5: User reviewed screenshots and explicitly approved
 - [ ] Phase 5: User feedback incorporated (if any), new screenshots show updated version
+- [ ] Phase 6: CLAUDE.md, SPEC.md, PROGRESS.md and DECISIONS.md all checked and updated where relevant
 - [ ] Phase 6: Committed to main with correct authorship, pushed to GitHub
 - [ ] GitHub Actions passed
 - [ ] Feature visible on GitHub Pages (live)

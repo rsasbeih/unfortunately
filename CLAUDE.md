@@ -176,6 +176,20 @@ A React + Vite app featuring an animated blob monster built entirely in SVG.
 - The suite does not cover animation *feel* (timing, easing, juice). That still needs eyes on the real app — screenshot or describe the result
 - Never write a check that reports PASS without asserting something
 
+### Documentation — update all four before every PR
+No PR ships without the docs matching the code. Do it in the same commit as the change, not as a follow-up, or it never happens. Each file has one job and they do not overlap:
+
+| File | Holds | Update when |
+|---|---|---|
+| `CLAUDE.md` | How the thing works *now*, for the next session. Architecture, behavior, constants that matter | Any behavior or structure changed |
+| `SPEC.md` | The feature spec: what is implemented, with its numbers, and what is still planned | A feature ships (move it out of Planned) or a documented value changes |
+| `PROGRESS.md` | Status only: what is built, what is next, the metrics table | A feature ships, priorities reorder, or the assertion count changes |
+| `DECISIONS.md` | Decisions and their reasoning, including what was rejected and why | You made a call someone could reasonably question later |
+
+- **`DECISIONS.md` is the one that gets forgotten.** If you chose between two defensible approaches, that belongs here — including the option you did not take. A future session that cannot see the alternatives will re-litigate the choice or quietly undo it
+- All four follow the rules above: **present tense, current state, no self-narration.** A decision entry says why the design *is* what it is, not the order in which you tried things
+- Not every change touches all four. A pure bug fix may only need `CLAUDE.md`. But check all four every time, and say which you updated
+
 ### Code Quality
 - **Write what is true now, never what it used to be.** Correct the value and move on. No `// was 1.0`, no `(previously capped at 2.0)`, no `*(later reverted — see below)*`, no "this used to be X". Applies to code comments, CLAUDE.md, SPEC.md, PROGRESS.md, README — everything in the repo
   - The reasoning behind a change goes in the **commit message**, where git keeps it attached to the diff that made it. That is the only place history belongs

@@ -289,9 +289,9 @@ M 100,25 C 148,22 192,62 194,108 C 196,148 168,178 100,180 C 32,178 4,148 6,108 
 
 ---
 
-### ✅ Blob Can Change Color (Planned Feature)
+### ✅ Blob Can Change Color
 
-**Decision:** User will be able to change blob color via settings UI.
+**Decision:** The user changes blob color via the settings UI.
 
 **Why:**
 - User's sister requested this feature
@@ -754,6 +754,120 @@ M 100,25 C 148,22 192,62 194,108 C 196,148 168,178 100,180 C 32,178 4,148 6,108 
 
 ---
 
+## Petting Decisions
+
+### ✅ Motion-Gated, Not Press-Gated (Nintendogs Model)
+
+**Decision:** The blob reacts to a pointer held down **and moving**. Holding still lets the reaction decay even while the button is down.
+
+**Why:**
+- Nintendogs rewards continuous rubbing; the dog stops reacting the moment the stylus stops. That gate is most of what makes it feel like touching a creature rather than pressing a button
+- A press-only model turns the blob into a button you depress
+
+**Rejected Alternatives:**
+- **Hold anywhere, no motion required** — more forgiving with a mouse and easier to discover, but the blob keeps reacting while your hand is still, which reads as a stuck state
+- **Click repeatedly** — simplest to build and very discoverable, but it is poking, not petting
+
+---
+
+### ✅ Lean Is Contact, Shimmy and Face Are Enjoyment
+
+**Decision:** When the pointer stops moving but stays down, the shimmy and the pleased face fade while the lean stays.
+
+**Why:**
+- A motionless finger is still physically touching the blob, so the body stays pushed over
+- But it is no longer being rubbed, so the enjoyment stops
+- Splitting the two is what makes holding still read as "still touching, no longer enjoying" rather than as a bug
+
+---
+
+### ✅ Petting Reuses the Celebration Smile
+
+**Decision:** No dedicated eye shapes for petting. Blush and hearts carry the difference.
+
+**Why:**
+- A third face is more vocabulary than the blob needs
+- The purpose-built squint sat lower and wider than the celebration arcs and read as a different character
+- Blush is new vocabulary that is reusable elsewhere; a third eye shape is not
+
+---
+
+### ✅ Everything Proportional to Blob Width
+
+**Decision:** Lean distance is a fraction of the blob's rendered width, the shimmy shift is a CSS percentage, and the heart rise is in `em`.
+
+**Why:**
+- The blob's size changes with every meal and is unbounded, so any pixel constant is correct at exactly one size
+- Percentages and `em` make the browser do the scaling, so there is no size math to keep in sync
+
+---
+
+### ✅ Hearts Overlap Rather Than Queue
+
+**Decision:** Hearts launch every `PET_HEART_INTERVAL_MS`, faster than the `PET_HEART_MS` they take to fade, so two or three ride up together, capped at three.
+
+**Why:**
+- Strictly sequential hearts read as sparse and metronomic
+- Launching faster than they fade is what produces a stream instead of a queue
+
+**Detail:** At the cap a launch is skipped rather than evicting a heart mid-flight, so none ever pop out of existence on screen.
+
+---
+
+### ✅ Petting Is Session-Only
+
+**Decision:** No growth, nothing persisted.
+
+**Why:**
+- Growth is the reward for feeding; giving petting the same reward flattens the distinction
+- Petting is for its own sake
+
+---
+
+## Mobile Decisions
+
+### ✅ Pointer Events, Not Mouse Events
+
+**Decision:** All drag interactions listen for `pointermove`/`pointerup`/`pointercancel`.
+
+**Why:**
+- A touch device fires no `mousemove` at all. A drag built on mouse events does not error, it silently degrades: the ball never tracks the finger, no velocity is recorded, and every throw falls through to the drop path
+- One set of handlers covers mouse, touch and stylus, so there is no branch to keep in sync
+
+---
+
+### ✅ Hover Styles Behind `@media (hover: hover)`
+
+**Decision:** Every `:hover` rule is guarded; the crumple stamp additionally gets `:active`.
+
+**Why:**
+- On a touch screen a tapped `:hover` sticks until you tap elsewhere, leaving the gear permanently rotated and the stamp permanently inverted
+- `:active` restores tap feedback that the guard would otherwise remove
+
+---
+
+### ✅ Blob Size Stays 0.5 on Mobile
+
+**Decision:** No separate mobile default size.
+
+**Why:**
+- 0.5 renders at 100×100px, which is already comfortable on a phone
+- A device-dependent default would make `monsterSize` mean different things on different screens, and it persists across devices via the same key
+
+---
+
+### ✅ Compose Panel Caps, Never Shrinks Below a Gap
+
+**Decision:** `min(400px, 100vw - 2 × gap)` rather than a mobile-specific layout.
+
+**Why:**
+- One rule covers every width instead of a breakpoint that needs maintaining
+- Keeps the desktop panel exactly as it was while guaranteeing the panel can never hang off a narrow screen
+
+**Rejected Alternative:** A full-screen compose sheet on mobile. More native-feeling, but it hides the blob entirely and is a much larger change than the overflow warranted.
+
+---
+
 ## Bug Fixes & Workarounds
 
 ### 🐛 Size Persistence Not Working
@@ -1006,9 +1120,9 @@ M 100,25 C 148,22 192,62 194,108 C 196,148 168,178 100,180 C 32,178 4,148 6,108 
 | **Physics** | COR=0.65, gravity fade, temporary | ✅ Accepted POC |
 | **Movement** | 90px hops, 180px arrival threshold | ✅ Locked (for now) |
 | **Celebration** | Every eat, same animation | ✅ Locked (for now) |
-| **Petting** | Click/long-press to pet | 🚧 Planned |
-| **Color Picker** | Settings button, hue slider | 🚧 Planned |
-| **Mobile** | Touch-drag throwing | 🚧 Planned |
+| **Petting** | Hold and rub; motion-gated | ✅ Shipped |
+| **Color Picker** | Settings button, hue slider | ✅ Shipped |
+| **Mobile** | Pointer events throughout, responsive layout | ✅ Shipped |
 | **Squashing** | Blob squashes at screen edges | 🚧 Planned |
 | **Multiple Pets** | Not now, might later | ❌ Rejected (for now) |
 | **Stats/Progression** | Not planned | ❌ Rejected |
