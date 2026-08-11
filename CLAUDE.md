@@ -152,6 +152,13 @@ A React + Vite app featuring an animated blob monster built entirely in SVG.
 - Create new commits (don't amend unless user explicitly requests)
 - Push immediately after committing
 
+#### What belongs in a commit message or PR description
+- **The baseline is `main`, not your first draft.** Describe how the code differs from what the reader already has. That is the only comparison they can make
+- **Never narrate your own working process.** A bug you introduced and fixed before anyone else saw it did not happen as far as the repo is concerned. No "fixed a bug found while iterating", no "my first attempt did X", no "round 3 changed Y", no "the tests caught Z in my own code", no "two bugs worth flagging"
+- The test: *would this line make sense to someone who has never seen my earlier attempts?* If it only makes sense to someone who watched me work, cut it
+- Keep the **rationale**, drop the **story**. `startPet calls preventDefault, because a press-drag would otherwise start a text selection` explains why the code is shaped this way and stays. `the hearts had a blue box until I fixed the selection highlight` is the same fact told as a diary and goes
+- **Iteration belongs in the conversation, not in artifacts.** Report each round while working — that is wanted — then let it go. It does not graduate into the commit message, the PR body, or the docs
+
 ### Testing & QA
 - **Run `npm run test:regression` after every feature, before committing.** Needs `npm run dev` already running. Headless, ~25s, exits non-zero on failure
 - It covers the *existing* features end to end: boot, color picker → blob repaint, the full compose → crumple → throw → settle → pursue → eat → grow chain, persistence across reload, and zero console errors

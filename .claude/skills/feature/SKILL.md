@@ -279,7 +279,19 @@ Building it once and showing the first result is not the workflow. Capture, judg
 - Body: explain the "why" and any non-obvious decisions
 - Footer: `Co-Authored-By: Ruba Sbeih <rsasbeih@gmail.com>`
 
-**This is where change history goes.** If you corrected a value, say so here — "default was 1.0, which was wrong, it is 0.5" belongs in the commit body and nowhere else. The files themselves only ever describe the present.
+**This is where change history goes — history relative to `main`, not to your own drafts.**
+
+If you corrected something the reader already had, say so here: "default was 1.0, which was wrong, it is 0.5" belongs in the commit body and nowhere else. The files themselves only ever describe the present.
+
+But a bug you introduced and fixed inside this same unmerged work is **not** history. Nobody but you ever saw it. Writing it up reads as confusing self-narration about code that never shipped:
+
+- ✅ "startPet calls preventDefault, because a press-drag would otherwise start a text selection" — explains why the code is shaped this way
+- ❌ "Fixed a bug found in the capture loop: hearts were rendering with a blue box" — same fact told as a diary
+- ❌ "The overlap check caught a second one", "my first attempt used X", "round 3 changed Y"
+
+Keep the rationale, drop the story. Before writing any line, ask whether it would make sense to someone who never saw your earlier attempts.
+
+This does not contradict reporting each iteration round to the user in Phase 4 — that reporting happens **in conversation, while working**. It stays there. It never graduates into a commit message, a PR body, or the docs.
 
 **Success Criteria:**
 - Commit is on `main` branch
