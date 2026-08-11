@@ -79,7 +79,7 @@ then open [http://localhost:5173](http://localhost:5173) and throw paper at a bl
 - too much CSS keyframe tuning
 - research into game juice & GDC talks
 - a suspicious amount of time thinking about blob physics
-- [Playwright](https://playwright.dev) for QA screenshots
+- [Playwright](https://playwright.dev) driving the regression suite (`npm run test:regression`)
 
 ## license
 

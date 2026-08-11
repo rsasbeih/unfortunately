@@ -28,7 +28,7 @@ A React + Vite app featuring an animated blob monster built entirely in SVG.
 ### Size
 - Controlled by a `size` multiplier (default `0.5`, so the SVG renders at 100×100px on first visit)
 - Applied as `width={SVG_BASE_SIZE * size}` — `viewBox` stays `0 0 200 200` so all path coordinates are stable
-- **Persisted in `localStorage` as `monsterSize`** — any parsed number is accepted; the old ≥1.0 minimum guard was removed (it was rejecting legitimately saved sizes)
+- **Persisted in `localStorage` as `monsterSize`** — any value that parses as a number is accepted
 - Grows by +0.04 each time the monster eats (no cap — grows infinitely)
 
 ### Animation
@@ -60,24 +60,6 @@ A React + Vite app featuring an animated blob monster built entirely in SVG.
   - Total duration ~800ms, monster grows by 0.04 size on completion (no cap)
 
 ## Recent Changes
-
-### Session: Doc Reconciliation + Repo Hygiene
-**What was done**: No behavior changes. Corrected this file where it had drifted from the code, and moved QA artifacts out of the repo root.
-
-**Doc corrections** (each verified against source, not memory):
-- Size default was documented as 1.0 with a ≥1.0 minimum guard; the code defaults to 0.5 with no guard (`App.jsx`)
-- Growth was documented both as uncapped and as capped at 2.0; there is no cap
-- Hearts were documented as 120px over 1.5s with 80ms stagger; the code does 180px over 3s with 20ms stagger (`App.jsx`)
-- The Animation section described a `Monster.css` file and a `squish` keyframe. **Neither exists** — the monster's motion is entirely the `mhHop`/`mhShadow` keyframes in `MonsterHop.jsx`
-- Body clip path was documented as `#bodyClip`; the actual id is `#mhC`
-- Color picker was listed as unbuilt; it shipped in PR #6
-
-**Repo hygiene**:
-- QA outputs (screenshots, `qa-results.json`) untracked and gitignored — they are regenerable
-- The four root-level QA scripts were **deleted**. An audit found none of them were tests: no assertions, no failure exit codes, not wired to any npm script or workflow, three of four hardcoded a stale `localhost:5174`, three of four required a visible browser, and several steps in `qa_test_run.mjs` pushed `status: 'PASS'` unconditionally after a fixed `waitForTimeout`. `qa_test_verify_persistence.mjs` still asserted the deleted `>= 1.0` size guard
-- Replaced with a single real one: `qa/regression.mjs` (see Testing below)
-
-**Known remaining drift**: the SVG still carries `className="monster"` with no CSS rule behind it, and `FeedingMechanic` passes `monsterPos`/`monsterSvgPx`/`monsterSize` props to `ProjectileBall` and `CrumpledBall` that neither component declares. Both are harmless leftovers, left alone to keep this change docs-and-files-only.
 
 ### Session: Codebase Cleanup (Lead + 8 Subagents)
 **What was done**: Comprehensive code quality audit and cleanup via multi-agent workflow.
@@ -140,17 +122,13 @@ A React + Vite app featuring an animated blob monster built entirely in SVG.
 **What was added**:
 1. **Ball throwing**: Paper ball crumpling, drag-to-aim, release-to-throw. Ball bounces anywhere on screen.
 2. **New eating animation** (`EatAnimation.jsx`): Canvas overlay with ball travel → white flash → particle burst/converge (satisfying visual feedback).
-3. **Size growth**: Monster grows +0.04 size per eaten ball, persisted to localStorage. (The 2.0 cap described here was later removed — growth is unbounded.)
+3. **Size growth**: Monster grows +0.04 size per eaten ball, persisted to localStorage.
 4. **Monster pathfinding**: Pursues ball, eats it on arrival, returns to idle.
 
 ### Session: Size Persistence & Bug Fixes
 **Changes**:
-- localStorage key standardized to `monsterSize` (was `monsterSizeV2`)
-- Default changed from 0.5 → 1.0 *(later reverted to 0.5 — see below)*
-- Added minimum-value guard (≥1.0) to ignore stale values from old era *(later removed — see below)*
+- localStorage key standardized to `monsterSize`
 - Ball visual snap on landing: fixed by CSS-transitioning rotation to 0deg + filter removal before React swap
-
-**Superseded by a later session (Aug 8–9)**: the ≥1.0 guard was rejecting sizes the app had legitimately saved, so sizes never persisted. The guard was deleted and the default returned to 0.5. Current behavior is in the Size section above.
 
 ## Standing Instructions
 
@@ -167,9 +145,14 @@ A React + Vite app featuring an animated blob monster built entirely in SVG.
 - The growth check is the load-bearing one — `monsterSize` only increases in `localStorage` if the entire feeding chain completed, so one assertion guards the whole mechanic
 - **Add a case to `qa/regression.mjs` when you ship a feature**, so the next feature can't silently break it
 - The suite does not cover animation *feel* (timing, easing, juice). That still needs eyes on the real app — screenshot or describe the result
-- Never write a check that reports PASS without asserting something. The previous QA scripts did exactly that and were deleted for it
+- Never write a check that reports PASS without asserting something
 
 ### Code Quality
+- **Write what is true now, never what it used to be.** Correct the value and move on. No `// was 1.0`, no `(previously capped at 2.0)`, no `*(later reverted — see below)*`, no "this used to be X". Applies to code comments, CLAUDE.md, SPEC.md, PROGRESS.md, README — everything in the repo
+  - The reasoning behind a change goes in the **commit message**, where git keeps it attached to the diff that made it. That is the only place history belongs
+  - A reader should learn the current state in one pass, without reconstructing a timeline to work out which number is live
+  - This does not conflict with "why not what" below: explain why the code *is* the way it is, in the present tense. `// 180px covers the worst-case gap when a large blob is edge-clamped` is good. `// raised from 135px because the old value got stuck` is not
+  - When a fact turns out to be wrong or stale, **replace** it. Do not annotate it, strike it through, or leave it with a correction underneath
 - **One-liner JSDoc headers**: Every `.jsx` and `.js` file starts with purpose description
   - Format: `/** Brief description of module purpose. */`
   - Helps AI agents understand context without reading whole file

@@ -202,7 +202,6 @@ Known non-blocking issues:
 - Golden path verified
 - Edge cases handled (edge clamping, physics settling)
 - Automated regression suite: `npm run test:regression` (headless, 14 assertions, exits non-zero on failure)
-- Verified the suite fails when the code breaks, not just that it passes when it works
 - Animation feel (timing, easing) still checked by eye — not automatable in any useful way
 
 ✅ **Performance**
