@@ -15,10 +15,13 @@ import {
   PET_EXPRESSION_HOLD_MS,
   PET_LINGER_MS,
   PET_HEART_MS,
-  PET_HEART_GAP_MS,
+  PET_HEART_INTERVAL_MS,
+  PET_HEART_MAX_CONCURRENT,
   PET_HEART_SIZE_RATIO,
   PET_HEART_OFFSET_RATIO,
   PET_HEART_RISE_EM,
+  PET_HEART_JITTER_RATIO,
+  PET_HEART_DURATION_JITTER,
 } from "./constants/petting";
 
 const STEP     = 90;
@@ -145,6 +148,7 @@ export default function MonsterHop({
   const targetLeanRef  = useRef(0);    // -1..1, where the pointer sits across the body
   const pleasedTimerRef = useRef(null);
   const [petHearts,   setPetHearts]   = useState([]);
+  const heartsRef     = useRef([]); // mirrors petHearts so launches stay pure
   const heartSideRef  = useRef(1);  // +1 right, -1 left; flips per heart
   const heartIdRef    = useRef(0);
   const lastHeartAtRef = useRef(0);
@@ -439,29 +443,44 @@ export default function MonsterHop({
     }
   }, [isRubbing]);
 
-  // One heart at a time while rubbing, alternating sides, the next starting as
-  // the previous finishes. Stop rubbing and no more are emitted; the one still
-  // in the air is left to finish rather than popped out.
+  // Hearts launch faster than they fade, so several ride up together. Sides
+  // alternate to keep them balanced, with scatter and a varied lifetime on each
+  // so the stream doesn't look like a metronome. Stop rubbing and launches stop;
+  // whatever is airborne finishes rather than popping out.
   useEffect(() => {
     if (!isRubbing) return;
 
+    const spread = () => (Math.random() * 2 - 1); // -1..1
+
+    // Everything is decided out here and the ref mirror is the source of truth,
+    // because a setState updater must be pure — StrictMode runs it twice, which
+    // silently cancelled the side flip when it lived inside.
     const emit = () => {
+      // Skip this launch rather than evicting a heart mid-flight
+      if (heartsRef.current.length >= PET_HEART_MAX_CONCURRENT) return;
+
       lastHeartAtRef.current = Date.now();
       const side = heartSideRef.current;
       heartSideRef.current = -side;
-      const id = (heartIdRef.current += 1);
-      setPetHearts(hearts => [...hearts, { id, side }]);
+
+      heartsRef.current = [...heartsRef.current, {
+        id:         (heartIdRef.current += 1),
+        side,
+        jitterX:    spread() * PET_HEART_JITTER_RATIO,
+        jitterY:    spread() * PET_HEART_JITTER_RATIO * 0.5,
+        durationMs: PET_HEART_MS * (1 + spread() * PET_HEART_DURATION_JITTER),
+      }];
+      setPetHearts(heartsRef.current);
     };
 
-    // A brief pause in rubbing re-runs this effect; don't let that stack hearts
-    const cycleMs    = PET_HEART_MS + PET_HEART_GAP_MS;
+    // A brief pause in rubbing re-runs this effect; don't let that bunch launches
     const sinceLast  = Date.now() - lastHeartAtRef.current;
-    const firstDelay = Math.max(0, cycleMs - sinceLast);
+    const firstDelay = Math.max(0, PET_HEART_INTERVAL_MS - sinceLast);
 
     let intervalId = null;
     const startId = setTimeout(() => {
       emit();
-      intervalId = setInterval(emit, cycleMs);
+      intervalId = setInterval(emit, PET_HEART_INTERVAL_MS);
     }, firstDelay);
 
     return () => {
@@ -541,14 +560,17 @@ export default function MonsterHop({
           <div
             key={heart.id}
             className="mh-pet-heart"
-            onAnimationEnd={() =>
-              setPetHearts(hearts => hearts.filter(h => h.id !== heart.id))
-            }
+            onAnimationEnd={() => {
+              heartsRef.current = heartsRef.current.filter(h => h.id !== heart.id);
+              setPetHearts(heartsRef.current);
+            }}
             style={{
-              left:     pos.x + svgPx / 2 + heart.side * svgPx * PET_HEART_OFFSET_RATIO,
-              top:      pos.y + svgPx * 0.22,
-              fontSize: svgPx * PET_HEART_SIZE_RATIO,
-              zIndex:   10000,
+              left: pos.x + svgPx / 2
+                    + (heart.side * PET_HEART_OFFSET_RATIO + heart.jitterX) * svgPx,
+              top:  pos.y + svgPx * (0.22 + heart.jitterY),
+              fontSize:          svgPx * PET_HEART_SIZE_RATIO,
+              animationDuration: `${heart.durationMs}ms`,
+              zIndex:            10000,
             }}
           >
             ❤️

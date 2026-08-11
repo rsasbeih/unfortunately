@@ -22,15 +22,21 @@ export const PET_SHIMMY_MS = 300;        // one side-to-side cycle
 export const PET_SHIMMY_SHIFT_PCT = 2.5;
 export const PET_SHIMMY_SQUASH = 0.02;   // slight scaleX wobble riding along with the shift
 
-// Hearts drift up one at a time while rubbing, alternating sides. The gap keeps
-// them strictly sequential — the previous heart is gone before the next appears,
-// rather than the two swapping over on the same frame.
-export const PET_HEART_MS = 2000;
-export const PET_HEART_GAP_MS = 250;
+// Hearts overlap: a new one launches while earlier ones are still rising, so a
+// steady rub keeps two or three in the air. Emitting faster than they fade is
+// what produces the stream.
+export const PET_HEART_MS = 1400;           // lifetime of one heart
+export const PET_HEART_INTERVAL_MS = 520;   // gap between launches
+export const PET_HEART_MAX_CONCURRENT = 3;  // skip a launch rather than exceed this
+
 // Smaller than the celebration hearts on purpose: petting is the quiet version
 export const PET_HEART_SIZE_RATIO = 0.18;   // font size as a fraction of blob width
-export const PET_HEART_OFFSET_RATIO = 0.44; // how far from centre each side sits
+export const PET_HEART_OFFSET_RATIO = 0.4;  // how far from centre each side sits
 export const PET_HEART_RISE_EM = 2.6;       // rise in em, so it scales with the heart
+
+// Per-heart randomness, so a stream never looks like a metronome
+export const PET_HEART_JITTER_RATIO = 0.13;   // sideways scatter, fraction of blob width
+export const PET_HEART_DURATION_JITTER = 0.22; // ± on lifetime, desynchronises the risers
 
 export const PET_BLUSH_FADE_MS = 300;      // blush fades in over this
 export const PET_EXPRESSION_HOLD_MS = 700; // pleased face lingers this long after rubbing stops

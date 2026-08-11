@@ -1,5 +1,6 @@
 /** Headless end-to-end regression test: run after every feature to prove the existing ones still work. */
 import { chromium } from 'playwright';
+import { PET_HEART_MAX_CONCURRENT } from '../src/constants/petting.js';
 
 const BASE_URL = process.env.REGRESSION_URL ?? 'http://localhost:5173/unfortunately/';
 
@@ -147,10 +148,10 @@ async function run() {
 
     check('rubbing brings up the blush', (await blushOpacity()) > 0.1);
     check('blob holds still while petted', (await wanderPos()) === posAtPetStart);
-    check('rubbing floats a heart', (await heartCount()) === 1);
+    check('rubbing floats a heart', (await heartCount()) >= 1);
 
-    // Keep rubbing across a heart changeover — they alternate one at a time,
-    // never overlapping, so the count must never exceed 1
+    // Keep rubbing: hearts launch faster than they fade, so they should stack up
+    // to a few at once and never past the cap
     let maxConcurrent = 0;
     for (let i = 0; i < 90; i++) {
       const angle = (i / 8) * Math.PI * 2;
@@ -161,7 +162,12 @@ async function run() {
       await page.waitForTimeout(28);
       maxConcurrent = Math.max(maxConcurrent, await heartCount());
     }
-    check('hearts never overlap', maxConcurrent === 1, `peak concurrent = ${maxConcurrent}`);
+    check('hearts overlap while rubbing', maxConcurrent >= 2, `peak concurrent = ${maxConcurrent}`);
+    check(
+      'hearts stay within the concurrency cap',
+      maxConcurrent <= PET_HEART_MAX_CONCURRENT,
+      `peak ${maxConcurrent}, cap ${PET_HEART_MAX_CONCURRENT}`,
+    );
 
     await page.mouse.up();
     await page.waitForTimeout(1300); // past the expression hold
