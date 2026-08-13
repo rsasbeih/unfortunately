@@ -1,4 +1,4 @@
-# Push to any non-main branch → builds a preview at /unfortunately/preview/<branch-name>/
+# Push to any non-main branch → builds a preview at /preview/<branch-name>/
 name: Preview Deploy
 on:
   push:
@@ -18,7 +18,7 @@ jobs:
         id: branch
         run: echo "name=${GITHUB_REF_NAME//\//-}" >> $GITHUB_OUTPUT
       - name: Build with preview base path
-        run: npx vite build --base=/unfortunately/preview/${{ steps.branch.outputs.name }}/
+        run: npx vite build --base=/preview/${{ steps.branch.outputs.name }}/
       - uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -30,7 +30,7 @@ jobs:
         with:
           script: |
             const branch = '${{ steps.branch.outputs.name }}';
-            const url = `https://rsasbeih.github.io/unfortunately/preview/${branch}/`;
+            const url = `https://unfortunatelies.com/preview/${branch}/`;
             const prs = await github.rest.pulls.list({
               owner: context.repo.owner,
               repo: context.repo.repo,

@@ -508,7 +508,7 @@ Mobile:
   - Triggers on push to `main`
   - Runs `npm ci && npm run build`
   - Deploys `dist/` to GitHub Pages
-- **Base Path:** `/unfortunately/` (configured in `vite.config.js`)
+- **Base Path:** `/` (configured in `vite.config.js`) — the site is served from the apex of a custom domain, so assets resolve at the root. Preview builds override this with `--base` on the command line
 - **Custom Domain:** Not yet
 
 ### Future Deployment

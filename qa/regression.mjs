@@ -2,7 +2,7 @@
 import { chromium } from 'playwright';
 import { PET_HEART_MAX_CONCURRENT } from '../src/constants/petting.js';
 
-const BASE_URL = process.env.REGRESSION_URL ?? 'http://localhost:5173/unfortunately/';
+const BASE_URL = process.env.REGRESSION_URL ?? 'http://localhost:5173/';
 
 // This sandbox ships a Chromium that doesn't match the pinned Playwright build.
 // Unset on a normal machine, where Playwright finds its own browser.
