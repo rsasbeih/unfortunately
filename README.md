@@ -1,4 +1,4 @@
-# 🫧 unfortunately
+# 🫧 unfortunatelies
 
 a weirdly charming blob monster that you feed & watch it grow. built with react, vite, and an embarrassing amount of love for jello.
 
