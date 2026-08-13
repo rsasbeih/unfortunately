@@ -167,6 +167,11 @@ A React + Vite app featuring an animated blob monster built entirely in SVG.
 - The test: *would this line make sense to someone who has never seen my earlier attempts?* If it only makes sense to someone who watched me work, cut it
 - Keep the **rationale**, drop the **story**. `startPet calls preventDefault, because a press-drag would otherwise start a text selection` explains why the code is shaped this way and stays. `the hearts had a blue box until I fixed the selection highlight` is the same fact told as a diary and goes
 - **Iteration belongs in the conversation, not in artifacts.** Report each round while working — that is wanted — then let it go. It does not graduate into the commit message, the PR body, or the docs
+- **Describe the diff, nothing else.** Investigation findings, reassurance about things that did not change, next steps, merge-order advice, "if X still happens try Y" — all of that is conversation. A reader opens a PR to see what changed and why, not to read the debugging session that led to it. If a line is not about the diff, it does not belong
+  - `DNS needs no change, the records already resolve correctly` — cut. Nothing in the diff touches DNS
+  - `Merge this one first, it is independent of #11` — cut. Say it in chat
+  - `If Settings still shows an error, re-run the check` — cut. Support advice, not a code change
+- **No session links, transcript URLs, or internal tooling identifiers.** This repository is public. A plain `Generated with Claude Code` attribution line is fine; anything carrying a session or conversation ID is not
 
 ### Testing & QA
 - **Run `npm run test:regression` after every feature, before committing.** Needs `npm run dev` already running. Headless, ~25s, exits non-zero on failure

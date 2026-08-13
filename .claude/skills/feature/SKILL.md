@@ -302,6 +302,10 @@ But a bug you introduced and fixed inside this same unmerged work is **not** his
 
 Keep the rationale, drop the story. Before writing any line, ask whether it would make sense to someone who never saw your earlier attempts.
 
+**The same goes for anything that is not about the diff.** A PR body is not a status report. Investigation findings about parts you did not change, reassurance ("your DNS is fine"), troubleshooting advice ("if it still fails, re-run the check"), and merge-order suggestions all belong in the conversation. The reader opened the PR to see what changed.
+
+**Never include a session link or transcript URL.** The repository is public. Plain `Generated with Claude Code` attribution is fine; anything carrying a session ID is not.
+
 This does not contradict reporting each iteration round to the user in Phase 4 — that reporting happens **in conversation, while working**. It stays there. It never graduates into a commit message, a PR body, or the docs.
 
 **Success Criteria:**
