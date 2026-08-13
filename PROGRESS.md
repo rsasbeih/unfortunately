@@ -27,7 +27,7 @@
 - **Code Standards** — JSDoc headers (planned but not yet implemented), clear naming conventions started
 
 ### Deployment & CI/CD
-- **GitHub Pages** — Live at https://rsasbeih.github.io/unfortunately/
+- **GitHub Pages** — Live at https://unfortunatelies.com (custom domain; `rsasbeih.github.io/unfortunately/` redirects there)
 - **GitHub Actions** — Automated build & deploy on push to main (npm ci && npm run build)
 - **Git Workflow** — Commits authored as Ruba Sbeih, clean history, proper authorship
 

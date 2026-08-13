@@ -76,7 +76,7 @@ This document records every major decision made during development: architecture
 - Free hosting for static sites
 - Automated deployment (no manual deploys)
 - Built into GitHub (no third-party CI needed)
-- `vite.config.js` sets `base: '/unfortunately/'` for correct path
+- `vite.config.js` sets `base: '/'`, matching the custom domain's root
 
 **Why Not:**
 - Custom domain: not set up (could add later)
@@ -1022,9 +1022,13 @@ M 100,25 C 148,22 192,62 194,108 C 196,148 168,178 100,180 C 32,178 4,148 6,108 
 
 ### ✅ Base Path Configuration
 
-**Decision:** `vite.config.js` sets `base: '/unfortunately/'` for GitHub Pages.
+**Decision:** `vite.config.js` sets `base: '/'`. Preview builds pass their own `--base` on the command line.
 
-**Why:** Repository deployed to GitHub Pages at `/unfortunately/`, not root domain
+**Why:** The site is served from the apex of the custom domain `unfortunatelies.com`, where the repository sits at the root. A repo-name prefix would make every asset request 404 and render a blank page, since the built HTML would ask for `/unfortunately/assets/...` on a host that has no such directory.
+
+**Rejected Alternative:** Keeping the `/unfortunately/` prefix so `rsasbeih.github.io/unfortunately/` still works as a direct path. Not needed — GitHub redirects the `github.io` URL to the custom domain once one is configured, so the prefix buys nothing and breaks the domain.
+
+**Related:** `public/CNAME` holds the custom domain so every build reproduces it. Relying on the file GitHub writes once into the publishing branch makes the domain depend on `keep_files: true` in the deploy workflow; anyone removing that flag would silently drop the domain on the next push.
 
 ---
 

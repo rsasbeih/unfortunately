@@ -221,6 +221,9 @@ No PR ships without the docs matching the code. Do it in the same commit as the 
 
 ### Deployment
 - **GitHub Pages**: Final deploy target via GitHub Actions
+- **Custom domain**: `unfortunatelies.com`, served from the apex. `vite.config.js` therefore sets `base: '/'` — a repo-name prefix would make every asset 404 and render a blank page
+- **`public/CNAME`** carries the domain so each build reproduces it, rather than depending on `keep_files: true` preserving the copy GitHub wrote into the publishing branch
+- **Previews** live at `/preview/<branch>/`; `preview-deploy.yml` passes its own `--base`, so it is unaffected by the root base
 - **Automated CI/CD**: Every push to main triggers build and deploy
 - **No manual deploys**: Workflow handles everything
 
